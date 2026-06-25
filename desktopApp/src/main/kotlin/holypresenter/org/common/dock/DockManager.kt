@@ -1,7 +1,7 @@
 package holypresenter.org.common.dock
 
 import androidx.compose.runtime.mutableStateListOf
-import holypresenter.org.common.module.HolyModule
+import holypresenter.org.platform.api.module.HolyModule
 
 class DockManager {
     private val _panels = mutableStateListOf<DockPanelState>()

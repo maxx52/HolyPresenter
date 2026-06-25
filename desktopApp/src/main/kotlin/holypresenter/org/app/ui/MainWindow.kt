@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.dp
 import holypresenter.org.common.dock.DockManager
 import holypresenter.org.common.dock.DockPanelState
 import holypresenter.org.common.dock.DockPosition
-import holypresenter.org.common.module.HolyModule
+import holypresenter.org.platform.api.module.HolyModule
 
 @Composable
 fun MainWindow(

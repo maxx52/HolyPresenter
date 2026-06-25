@@ -1,4 +1,4 @@
-package holypresenter.org.common.module
+package holypresenter.org.platform.api.module
 
 import holypresenter.org.platform.core.PlatformContext
 

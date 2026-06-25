@@ -10,7 +10,7 @@ import androidx.compose.runtime.remember
 import holypresenter.org.app.ui.MainWindow
 import holypresenter.org.common.commands.CommandBus
 import holypresenter.org.common.events.EventBus
-import holypresenter.org.common.module.ModuleContext
+import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.common.module.ModuleRegistry
 import holypresenter.org.common.services.ServiceRegistry
 import holypresenter.org.modules.projector.ProjectorModule

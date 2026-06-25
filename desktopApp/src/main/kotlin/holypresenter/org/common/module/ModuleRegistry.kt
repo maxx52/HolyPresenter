@@ -1,6 +1,8 @@
 package holypresenter.org.common.module
 
 import androidx.compose.runtime.mutableStateListOf
+import holypresenter.org.platform.api.module.HolyModule
+import holypresenter.org.platform.api.module.ModuleContext
 
 class ModuleRegistry(
     private val context: ModuleContext

@@ -9,9 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import holypresenter.org.common.dock.DockPanel
 import holypresenter.org.common.dock.DockPosition
-import holypresenter.org.common.module.HolyModule
-import holypresenter.org.common.module.ModuleContext
-import holypresenter.org.common.module.ModuleMetadata
+import holypresenter.org.platform.api.module.HolyModule
+import holypresenter.org.platform.api.module.ModuleContext
+import holypresenter.org.platform.api.module.ModuleMetadata
 import holypresenter.org.modules.projector.commands.ShowTextCommand
 import holypresenter.org.modules.welcome.commands.ShowWelcomeMessageCommand
 import holypresenter.org.modules.welcome.events.WelcomeClickedEvent

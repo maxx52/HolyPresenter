@@ -1,9 +1,9 @@
 package holypresenter.org.modules.projector
 
 import androidx.compose.runtime.Composable
-import holypresenter.org.common.module.HolyModule
-import holypresenter.org.common.module.ModuleContext
-import holypresenter.org.common.module.ModuleMetadata
+import holypresenter.org.platform.api.module.HolyModule
+import holypresenter.org.platform.api.module.ModuleContext
+import holypresenter.org.platform.api.module.ModuleMetadata
 import holypresenter.org.modules.projector.commands.ShowTextCommand
 import holypresenter.org.modules.projector.ui.ProjectorWorkspace
 
