@@ -11,15 +11,21 @@ import holypresenter.org.common.dock.DockPanel
 import holypresenter.org.common.dock.DockPosition
 import holypresenter.org.common.module.HolyModule
 import holypresenter.org.common.module.ModuleContext
+import holypresenter.org.common.module.ModuleMetadata
 import holypresenter.org.modules.projector.commands.ShowTextCommand
 import holypresenter.org.modules.welcome.commands.ShowWelcomeMessageCommand
 import holypresenter.org.modules.welcome.events.WelcomeClickedEvent
 import holypresenter.org.modules.welcome.ui.WelcomeInfoPanel
 
 class WelcomeModule : HolyModule {
-    override val id: String = "welcome"
-    override val name: String = "Добро пожаловать"
-    override val version: String = "1.0.0"
+    override val metadata = ModuleMetadata(
+        id = "welcome",
+        name = "Добро пожаловать",
+        version = "1.0.0",
+        author = "HolyPresenter",
+        description = "Тестовый модуль приветствия"
+    )
+
     private lateinit var context: ModuleContext
 
     @Composable
@@ -33,7 +39,7 @@ class WelcomeModule : HolyModule {
 
         Button(
             onClick = {
-                context.eventBus.publish(
+                context.platform.eventBus.publish(
                     WelcomeClickedEvent("Кнопка Welcome нажата")
                 )
             }
@@ -43,7 +49,7 @@ class WelcomeModule : HolyModule {
 
         Button(
             onClick = {
-                context.commandBus.execute(
+                context.platform.commandBus.execute(
                     ShowWelcomeMessageCommand("Привет из CommandBus")
                 )
             }
@@ -53,7 +59,7 @@ class WelcomeModule : HolyModule {
 
         Button(
             onClick = {
-                context.commandBus.execute(
+                context.platform.commandBus.execute(
                     ShowTextCommand("Привет на проектор из WelcomeModule")
                 )
             }
@@ -74,11 +80,11 @@ class WelcomeModule : HolyModule {
     override fun onLoad(context: ModuleContext) {
         this.context = context
 
-        context.eventBus.subscribe("welcome.clicked") { event ->
+        context.platform.eventBus.subscribe("welcome.clicked") { event ->
             println("Получено событие: ${event.name}")
         }
 
-        context.commandBus.register(
+        context.platform.commandBus.register(
             commandName = "welcome.showMessage"
         ) { command: ShowWelcomeMessageCommand ->
             println("Команда получена: ${command.message}")

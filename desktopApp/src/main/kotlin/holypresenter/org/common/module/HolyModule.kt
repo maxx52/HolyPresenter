@@ -4,13 +4,19 @@ import androidx.compose.runtime.Composable
 import holypresenter.org.common.dock.DockPanel
 
 interface HolyModule {
-    val id: String
-    val name: String
-    val version: String
+    val metadata: ModuleMetadata
+
+    fun onInstall(context: ModuleContext) {}
 
     fun onLoad(context: ModuleContext) {}
 
+    fun onEnable(context: ModuleContext) {}
+
+    fun onDisable() {}
+
     fun onUnload() {}
+
+    fun onUninstall() {}
 
     fun dockPanels(): List<DockPanel> = emptyList()
 

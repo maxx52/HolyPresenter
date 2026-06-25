@@ -11,9 +11,12 @@ import holypresenter.org.app.ui.MainWindow
 import holypresenter.org.common.commands.CommandBus
 import holypresenter.org.common.events.EventBus
 import holypresenter.org.common.module.ModuleContext
-import holypresenter.org.common.module.ModuleManager
+import holypresenter.org.common.module.ModuleRegistry
+import holypresenter.org.common.services.ServiceRegistry
 import holypresenter.org.modules.projector.ProjectorModule
 import holypresenter.org.modules.welcome.WelcomeModule
+import holypresenter.org.platform.core.PlatformContext
+import holypresenter.org.platform.window.DefaultWindowService
 
 @Composable
 fun HolyPresenterApp(
@@ -27,12 +30,22 @@ fun HolyPresenterApp(
 
     val eventBus = remember { EventBus() }
     val commandBus = remember { CommandBus() }
+    val services = remember { ServiceRegistry() }
+    val windowService = remember { DefaultWindowService() }
 
-    val moduleManager = remember {
-        ModuleManager(
+    val platformContext = remember {
+        PlatformContext(
+            eventBus = eventBus,
+            commandBus = commandBus,
+            services = services,
+            windowService = windowService
+        )
+    }
+
+    val moduleRegistry = remember {
+        ModuleRegistry(
             context = ModuleContext(
-                eventBus = eventBus,
-                commandBus = commandBus
+                platform = platformContext
             )
         ).apply {
             register(WelcomeModule())
@@ -47,7 +60,7 @@ fun HolyPresenterApp(
     ) {
         MaterialTheme {
             MainWindow(
-                modules = moduleManager.modules
+                modules = moduleRegistry.modules
             )
         }
     }

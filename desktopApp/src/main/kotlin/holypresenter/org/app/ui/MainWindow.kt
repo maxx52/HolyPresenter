@@ -91,7 +91,7 @@ private fun ModuleListPanel(
 
         modules.forEach { module ->
             Text(
-                text = module.name,
+                text = module.metadata.name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {

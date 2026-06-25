@@ -2,22 +2,30 @@ package holypresenter.org.common.module
 
 import androidx.compose.runtime.mutableStateListOf
 
-class ModuleManager(
+class ModuleRegistry(
     private val context: ModuleContext
 ) {
     private val _modules = mutableStateListOf<HolyModule>()
     val modules: List<HolyModule> = _modules
 
     fun register(module: HolyModule) {
-        if (_modules.any { it.id == module.id }) return
+        if (_modules.any { it.metadata.id == module.metadata.id }) return
 
+        module.onInstall(context)
         module.onLoad(context)
-        _modules.add(module)
+        module.onEnable(context)
+
+        _modules += module
     }
 
     fun unregister(moduleId: String) {
-        val module = _modules.firstOrNull { it.id == moduleId } ?: return
+        val module = _modules.firstOrNull {
+            it.metadata.id == moduleId
+        } ?: return
+
+        module.onDisable()
         module.onUnload()
-        _modules.remove(module)
+
+        _modules -= module
     }
 }

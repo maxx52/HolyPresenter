@@ -1,10 +1,7 @@
 package holypresenter.org.common.module
 
-import holypresenter.org.common.commands.CommandBus
-import holypresenter.org.common.events.EventBus
+import holypresenter.org.platform.core.PlatformContext
 
 class ModuleContext(
-    val appName: String = "HolyPresenter",
-    val eventBus: EventBus,
-    val commandBus: CommandBus
+    val platform: PlatformContext
 )
