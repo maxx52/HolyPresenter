@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import holypresenter.org.common.dock.DockPanel
 import holypresenter.org.common.dock.DockPosition
 import holypresenter.org.common.module.HolyModule
+import holypresenter.org.modules.welcome.ui.WelcomeInfoPanel
 
 class WelcomeModule : HolyModule {
     override val id: String = "welcome"
@@ -25,15 +26,12 @@ class WelcomeModule : HolyModule {
         }
     }
 
-    override fun dockPanels(): List<DockPanel> {
-        return listOf(
-            DockPanel(
-                id = "welcome.info",
-                title = "Информация",
-                position = DockPosition.RIGHT
-            ) {
-                Text("Панель модуля Welcome")
-            }
+    override fun dockPanels() = listOf(
+        DockPanel(
+            id = "welcome.info",
+            title = "Информация",
+            position = DockPosition.RIGHT,
+            content = WelcomeInfoPanel()
         )
-    }
+    )
 }

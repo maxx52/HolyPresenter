@@ -8,6 +8,7 @@ import androidx.compose.ui.window.rememberWindowState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import holypresenter.org.app.ui.MainWindow
+import holypresenter.org.common.events.EventBus
 import holypresenter.org.common.module.ModuleContext
 import holypresenter.org.common.module.ModuleManager
 import holypresenter.org.modules.welcome.WelcomeModule
@@ -22,9 +23,13 @@ fun HolyPresenterApp(
         position = WindowPosition(80.dp, 0.dp)
     )
 
+    val eventBus = remember { EventBus() }
+
     val moduleManager = remember {
         ModuleManager(
-            context = ModuleContext()
+            context = ModuleContext(
+                eventBus = eventBus
+            )
         ).apply {
             register(WelcomeModule())
         }
