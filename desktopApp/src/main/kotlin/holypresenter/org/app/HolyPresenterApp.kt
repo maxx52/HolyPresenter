@@ -8,9 +8,11 @@ import androidx.compose.ui.window.rememberWindowState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import holypresenter.org.app.ui.MainWindow
+import holypresenter.org.common.commands.CommandBus
 import holypresenter.org.common.events.EventBus
 import holypresenter.org.common.module.ModuleContext
 import holypresenter.org.common.module.ModuleManager
+import holypresenter.org.modules.projector.ProjectorModule
 import holypresenter.org.modules.welcome.WelcomeModule
 
 @Composable
@@ -24,14 +26,17 @@ fun HolyPresenterApp(
     )
 
     val eventBus = remember { EventBus() }
+    val commandBus = remember { CommandBus() }
 
     val moduleManager = remember {
         ModuleManager(
             context = ModuleContext(
-                eventBus = eventBus
+                eventBus = eventBus,
+                commandBus = commandBus
             )
         ).apply {
             register(WelcomeModule())
+            register(ProjectorModule())
         }
     }
 
