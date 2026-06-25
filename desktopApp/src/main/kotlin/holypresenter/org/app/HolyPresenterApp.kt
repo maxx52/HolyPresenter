@@ -8,11 +8,11 @@ import androidx.compose.ui.window.rememberWindowState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import holypresenter.org.app.ui.MainWindow
-import holypresenter.org.platform.api.commands.CommandBus
-import holypresenter.org.platform.api.events.EventBus
+import holypresenter.org.platform.core.CommandBus
+import holypresenter.org.platform.core.EventBus
 import holypresenter.org.platform.api.module.ModuleContext
-import holypresenter.org.platform.api.module.ModuleRegistry
-import holypresenter.org.platform.api.services.ServiceRegistry
+import holypresenter.org.platform.core.ModuleRegistry
+import holypresenter.org.platform.core.ServiceRegistry
 import holypresenter.org.modules.projector.ProjectorModule
 import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.platform.core.PlatformContext

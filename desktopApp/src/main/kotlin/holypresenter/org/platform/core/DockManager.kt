@@ -1,6 +1,7 @@
-package holypresenter.org.platform.api.docking
+package holypresenter.org.platform.core
 
 import androidx.compose.runtime.mutableStateListOf
+import holypresenter.org.platform.api.docking.DockPanelState
 import holypresenter.org.platform.api.module.HolyModule
 
 class DockManager {

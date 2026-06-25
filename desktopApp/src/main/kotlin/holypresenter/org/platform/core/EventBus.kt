@@ -1,4 +1,6 @@
-package holypresenter.org.platform.api.events
+package holypresenter.org.platform.core
+
+import holypresenter.org.platform.api.events.HolyEvent
 
 class EventBus {
     private val listeners = mutableMapOf<String, MutableList<(HolyEvent) -> Unit>>()
