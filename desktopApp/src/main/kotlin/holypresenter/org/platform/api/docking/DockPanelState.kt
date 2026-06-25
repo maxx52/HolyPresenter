@@ -1,4 +1,4 @@
-package holypresenter.org.common.dock
+package holypresenter.org.platform.api.docking
 
 data class DockPanelState(
     val panel: DockPanel,

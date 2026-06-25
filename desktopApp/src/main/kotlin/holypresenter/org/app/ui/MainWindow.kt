@@ -6,9 +6,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import holypresenter.org.common.dock.DockManager
-import holypresenter.org.common.dock.DockPanelState
-import holypresenter.org.common.dock.DockPosition
+import holypresenter.org.platform.api.docking.DockManager
+import holypresenter.org.platform.api.docking.DockPanelState
+import holypresenter.org.platform.api.docking.DockPosition
 import holypresenter.org.platform.api.module.HolyModule
 
 @Composable

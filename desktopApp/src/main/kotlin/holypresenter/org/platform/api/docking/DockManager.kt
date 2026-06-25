@@ -1,4 +1,4 @@
-package holypresenter.org.common.dock
+package holypresenter.org.platform.api.docking
 
 import androidx.compose.runtime.mutableStateListOf
 import holypresenter.org.platform.api.module.HolyModule

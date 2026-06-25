@@ -1,4 +1,4 @@
-package holypresenter.org.common.services
+package holypresenter.org.platform.api.services
 
 import kotlin.reflect.KClass
 

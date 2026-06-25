@@ -7,8 +7,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import holypresenter.org.common.dock.DockPanel
-import holypresenter.org.common.dock.DockPosition
+import holypresenter.org.platform.api.docking.DockPanel
+import holypresenter.org.platform.api.docking.DockPosition
 import holypresenter.org.platform.api.module.HolyModule
 import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.module.ModuleMetadata

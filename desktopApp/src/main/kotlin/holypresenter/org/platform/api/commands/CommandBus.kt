@@ -1,4 +1,4 @@
-package holypresenter.org.common.commands
+package holypresenter.org.platform.api.commands
 
 class CommandBus {
     private val handlers =

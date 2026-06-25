@@ -1,7 +1,7 @@
 package holypresenter.org.platform.api.module
 
 import androidx.compose.runtime.Composable
-import holypresenter.org.common.dock.DockPanel
+import holypresenter.org.platform.api.docking.DockPanel
 
 interface HolyModule {
     val metadata: ModuleMetadata

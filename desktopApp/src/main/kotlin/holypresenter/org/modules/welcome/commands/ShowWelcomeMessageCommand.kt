@@ -1,6 +1,6 @@
 package holypresenter.org.modules.welcome.commands
 
-import holypresenter.org.common.commands.HolyCommand
+import holypresenter.org.platform.api.commands.HolyCommand
 
 data class ShowWelcomeMessageCommand(
     val message: String
