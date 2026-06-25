@@ -1,0 +1,7 @@
+package holypresenter.org
+
+interface Platform {
+    val name: String
+}
+
+expect fun getPlatform(): Platform
