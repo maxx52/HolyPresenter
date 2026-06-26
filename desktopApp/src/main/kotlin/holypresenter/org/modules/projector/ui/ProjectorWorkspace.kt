@@ -6,11 +6,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import holypresenter.org.modules.projector.model.ProjectorContent
 
 @Composable
 fun ProjectorWorkspace(
-    currentText: String
+    currentContent: ProjectorContent
 ) {
+    val text = when (currentContent) {
+        ProjectorContent.Empty -> "Проектор пуст"
+        is ProjectorContent.Text -> currentContent.value
+        ProjectorContent.BlackScreen -> "Чёрный экран"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -32,7 +39,7 @@ fun ProjectorWorkspace(
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(currentText)
+                Text(text)
             }
         }
     }

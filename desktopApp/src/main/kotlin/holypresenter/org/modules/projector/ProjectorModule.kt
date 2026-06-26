@@ -34,7 +34,7 @@ class ProjectorModule : HolyModule {
     @Composable
     override fun Workspace() {
         ProjectorWorkspace(
-            currentText = projectorService.currentText
+            currentContent = projectorService.currentContent,
         )
     }
 }
