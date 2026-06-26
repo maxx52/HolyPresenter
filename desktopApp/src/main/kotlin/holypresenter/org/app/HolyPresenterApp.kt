@@ -8,16 +8,15 @@ import androidx.compose.ui.window.rememberWindowState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import holypresenter.org.app.ui.MainWindow
-import holypresenter.org.platform.core.CommandBus
-import holypresenter.org.platform.core.EventBus
+import holypresenter.org.platform.api.commands.CommandBus
+import holypresenter.org.platform.api.events.EventBus
 import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.core.ModuleRegistry
-import holypresenter.org.platform.core.ServiceRegistry
+import holypresenter.org.platform.api.services.ServiceRegistry
 import holypresenter.org.modules.projector.ProjectorModule
 import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.platform.core.PlatformContext
 import holypresenter.org.platform.layout.DefaultLayoutService
-import holypresenter.org.platform.layout.WindowLayout
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
 import holypresenter.org.platform.window.DefaultWindowService
 import java.io.File
@@ -32,12 +31,18 @@ fun HolyPresenterApp(
         position = WindowPosition(80.dp, 0.dp)
     )
 
-    val layoutRepository = JsonLayoutRepository(
-        File("layouts")
-    )
+    val layoutRepository = remember {
+        JsonLayoutRepository(
+            File("layouts")
+        )
+    }
 
     val layoutService = remember {
         DefaultLayoutService(layoutRepository)
+    }
+
+    val windowService = remember {
+        DefaultWindowService(layoutService)
     }
 
     layoutService.load("Default")
@@ -45,14 +50,14 @@ fun HolyPresenterApp(
     val eventBus = remember { EventBus() }
     val commandBus = remember { CommandBus() }
     val services = remember { ServiceRegistry() }
-    val windowService = remember { DefaultWindowService(layoutService) }
 
     val platformContext = remember {
         PlatformContext(
             eventBus = eventBus,
             commandBus = commandBus,
             services = services,
-            windowService = windowService
+            windowService = windowService,
+            layoutService = layoutService,
         )
     }
 

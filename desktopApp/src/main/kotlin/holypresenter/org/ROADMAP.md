@@ -7,7 +7,7 @@
 - [x] CommandBus
 - [x] ServiceRegistry
 - [x] WindowService
-- [ ] LayoutService
+- [x] LayoutService
 - [ ] SettingsService
 - [ ] PluginLoader
 

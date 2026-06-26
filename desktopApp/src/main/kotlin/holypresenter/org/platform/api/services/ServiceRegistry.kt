@@ -1,6 +1,5 @@
-package holypresenter.org.platform.core
+package holypresenter.org.platform.api.services
 
-import holypresenter.org.platform.api.services.HolyService
 import kotlin.reflect.KClass
 
 class ServiceRegistry {
