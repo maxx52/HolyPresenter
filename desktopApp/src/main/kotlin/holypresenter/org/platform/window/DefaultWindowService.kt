@@ -1,8 +1,13 @@
 package holypresenter.org.platform.window
 
 import androidx.compose.runtime.mutableStateListOf
+import holypresenter.org.platform.layout.LayoutService
+import holypresenter.org.platform.layout.WindowLayout
 
-class DefaultWindowService : WindowService {
+class DefaultWindowService(
+    private val layoutService: LayoutService
+) : WindowService {
+
     private val _windows = mutableStateListOf<WindowState>()
     override val windows: List<WindowState> = _windows
 
@@ -14,7 +19,15 @@ class DefaultWindowService : WindowService {
 
         _windows += WindowState(
             id = id,
-            title = title
+            title = title,
+            isOpen = false
+        )
+
+        layoutService.updateWindow(
+            WindowLayout(
+                id = id,
+                isOpen = false
+            )
         )
     }
 
@@ -22,12 +35,26 @@ class DefaultWindowService : WindowService {
         update(id) {
             it.copy(isOpen = true)
         }
+
+        layoutService.updateWindow(
+            WindowLayout(
+                id = id,
+                isOpen = true
+            )
+        )
     }
 
     override fun close(id: String) {
         update(id) {
             it.copy(isOpen = false)
         }
+
+        layoutService.updateWindow(
+            WindowLayout(
+                id = id,
+                isOpen = false
+            )
+        )
     }
 
     override fun isOpen(id: String): Boolean {
