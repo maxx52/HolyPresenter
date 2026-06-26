@@ -53,6 +53,16 @@ fun HolyPresenterApp(
     val commandBus = remember { CommandBus() }
     val services = remember { ServiceRegistry() }
 
+    val settingsRepository = remember {
+        JsonSettingsRepository(
+            File("HolyPresenter/settings/platform.json")
+        )
+    }
+
+    val settingsService = remember {
+        DefaultSettingsService(settingsRepository)
+    }
+
     val platformContext = remember {
         PlatformContext(
             eventBus = eventBus,
@@ -60,6 +70,7 @@ fun HolyPresenterApp(
             services = services,
             windowService = windowService,
             layoutService = layoutService,
+            settingsService = settingsService,
         )
     }
 
@@ -72,16 +83,6 @@ fun HolyPresenterApp(
             register(WelcomeModule())
             register(ProjectorModule())
         }
-    }
-
-    val settingsRepository = remember {
-        JsonSettingsRepository(
-            File("HolyPresenter/settings/platform.json")
-        )
-    }
-
-    val settingsService = remember {
-        DefaultSettingsService(settingsRepository)
     }
 
     layoutService.save()

@@ -4,6 +4,7 @@ import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
 import holypresenter.org.platform.api.services.ServiceRegistry
 import holypresenter.org.platform.layout.LayoutService
+import holypresenter.org.platform.settings.SettingsService
 import holypresenter.org.platform.window.WindowService
 
 class PlatformContext(
@@ -11,5 +12,6 @@ class PlatformContext(
     val commandBus: CommandBus,
     val services: ServiceRegistry,
     val windowService: WindowService,
-    val layoutService: LayoutService
+    val layoutService: LayoutService,
+    val settingsService: SettingsService
 )
