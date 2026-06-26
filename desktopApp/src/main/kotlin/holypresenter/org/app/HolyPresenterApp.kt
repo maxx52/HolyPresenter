@@ -16,7 +16,10 @@ import holypresenter.org.platform.core.ServiceRegistry
 import holypresenter.org.modules.projector.ProjectorModule
 import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.platform.core.PlatformContext
+import holypresenter.org.platform.layout.DefaultLayoutService
+import holypresenter.org.platform.layout.repository.JsonLayoutRepository
 import holypresenter.org.platform.window.DefaultWindowService
+import java.io.File
 
 @Composable
 fun HolyPresenterApp(
@@ -28,10 +31,20 @@ fun HolyPresenterApp(
         position = WindowPosition(80.dp, 0.dp)
     )
 
+    val layoutRepository = JsonLayoutRepository(
+        File("layouts")
+    )
+
+    val layoutService = remember {
+        DefaultLayoutService(layoutRepository)
+    }
+
+    layoutService.load("Default")
+
     val eventBus = remember { EventBus() }
     val commandBus = remember { CommandBus() }
     val services = remember { ServiceRegistry() }
-    val windowService = remember { DefaultWindowService() }
+    val windowService = remember { DefaultWindowService(layoutService) }
 
     val platformContext = remember {
         PlatformContext(
@@ -52,6 +65,8 @@ fun HolyPresenterApp(
             register(ProjectorModule())
         }
     }
+
+    layoutService.save()
 
     Window(
         onCloseRequest = onExit,
