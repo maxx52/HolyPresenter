@@ -17,6 +17,7 @@ dependencies {
     implementation("org.jetbrains.compose.components:components-resources:1.11.1")
     implementation(libs.kotlinx.coroutinesSwing)
     implementation(libs.compose.uiToolingPreview)
+    implementation(libs.kotlinx.serialization.json)
 }
 
 compose.desktop {

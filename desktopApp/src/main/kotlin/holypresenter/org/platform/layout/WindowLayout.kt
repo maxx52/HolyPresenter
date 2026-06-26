@@ -1,5 +1,8 @@
 package holypresenter.org.platform.layout
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class WindowLayout(
     val id: String,
     val x: Int = 80,
