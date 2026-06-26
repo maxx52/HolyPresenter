@@ -15,7 +15,8 @@ class ProjectorModule : HolyModule {
         name = "Проектор",
         version = "1.0.0",
         author = "HolyPresenter",
-        description = "Модуль вывода контента на проектор"
+        description = "Модуль вывода контента на проектор",
+        apiVersion = "1.0.0",
     )
 
     override fun onLoad(context: ModuleContext) {
