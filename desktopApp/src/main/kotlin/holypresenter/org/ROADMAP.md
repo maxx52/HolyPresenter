@@ -8,7 +8,7 @@
 - [x] ServiceRegistry
 - [x] WindowService
 - [x] LayoutService
-- [ ] SettingsService
+- [x] SettingsService
 - [ ] PluginLoader
 
 ## Runtime
