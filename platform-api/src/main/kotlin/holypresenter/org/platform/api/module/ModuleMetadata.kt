@@ -7,5 +7,6 @@ data class ModuleMetadata(
     val author: String = "",
     val description: String = "",
     val minCoreVersion: String = "1.0.0",
-    val dependencies: List<String> = emptyList()
+    val dependencies: List<String> = emptyList(),
+    val apiVersion: String
 )
