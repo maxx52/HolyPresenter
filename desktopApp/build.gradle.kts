@@ -19,6 +19,9 @@ dependencies {
     implementation(libs.kotlinx.coroutinesSwing)
     implementation(libs.compose.uiToolingPreview)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.junit.junit)
+    testImplementation(kotlin("test"))
+    implementation(kotlin("test"))
 }
 
 compose.desktop {

@@ -17,6 +17,7 @@ import holypresenter.org.modules.projector.ProjectorModule
 import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.platform.core.PlatformContext
 import holypresenter.org.platform.layout.DefaultLayoutService
+import holypresenter.org.platform.layout.WindowLayout
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
 import holypresenter.org.platform.window.DefaultWindowService
 import java.io.File
