@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.junit.junit)
     testImplementation(kotlin("test"))
     implementation(kotlin("test"))
+    implementation(project(":platform-api"))
 }
 
 compose.desktop {
