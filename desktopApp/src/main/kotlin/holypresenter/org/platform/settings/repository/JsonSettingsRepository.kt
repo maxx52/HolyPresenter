@@ -1,7 +1,6 @@
 package holypresenter.org.platform.settings.repository
 
 import holypresenter.org.platform.settings.AppSettings
-import holypresenter.org.platform.settings.SettingsRepository
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -23,9 +22,7 @@ class JsonSettingsRepository(
             return AppSettings()
         }
 
-        return json.decodeFromString<AppSettings>(
-            settingsFile.readText()
-        )
+        return json.decodeFromString(settingsFile.readText())
     }
 
     override fun save(settings: AppSettings) {

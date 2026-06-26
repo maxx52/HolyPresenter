@@ -1,14 +1,11 @@
 package holypresenter.org.platform.settings.repository
 
 import holypresenter.org.platform.settings.AppSettings
-import holypresenter.org.platform.settings.SettingsRepository
 
 class InMemorySettingsRepository : SettingsRepository {
-    private var settings: AppSettings? = null
+    private var settings = AppSettings()
 
-    override fun load(): AppSettings? {
-        return settings
-    }
+    override fun load(): AppSettings = settings
 
     override fun save(settings: AppSettings) {
         this.settings = settings
