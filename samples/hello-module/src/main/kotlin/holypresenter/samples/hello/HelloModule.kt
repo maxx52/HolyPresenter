@@ -7,7 +7,6 @@ import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.module.ModuleMetadata
 
 class HelloModule : HolyModule {
-
     override val metadata = ModuleMetadata(
         id = "hello",
         name = "Hello Module",
