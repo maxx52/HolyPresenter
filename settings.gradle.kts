@@ -35,3 +35,4 @@ plugins {
 include(":desktopApp")
 include(":shared")
 include(":platform-api")
+include(":samples:hello-module")

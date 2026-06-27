@@ -23,7 +23,8 @@ class WelcomeModule : HolyModule {
         name = "Добро пожаловать",
         version = "1.0.0",
         author = "HolyPresenter",
-        description = "Тестовый модуль приветствия"
+        description = "Тестовый модуль приветствия",
+        apiVersion = "1.0.0",
     )
 
     private lateinit var context: ModuleContext
