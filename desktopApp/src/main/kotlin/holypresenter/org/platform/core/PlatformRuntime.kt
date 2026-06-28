@@ -1,6 +1,5 @@
 package holypresenter.org.platform.core
 
-import holypresenter.org.modules.projector.ProjectorModule
 import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
@@ -8,6 +7,7 @@ import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.services.ServiceRegistry
 import holypresenter.org.platform.layout.DefaultLayoutService
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
+import holypresenter.org.platform.plugins.PluginLoader
 import holypresenter.org.platform.settings.DefaultSettingsService
 import holypresenter.org.platform.settings.repository.JsonSettingsRepository
 import holypresenter.org.platform.window.DefaultWindowService
@@ -51,9 +51,13 @@ class PlatformRuntime(
         )
     )
 
+    private val pluginLoader = PluginLoader(
+        modulesDirectory = File(rootDirectory, "modules")
+    )
+
     init {
-        moduleRegistry.register(WelcomeModule())
-        moduleRegistry.register(ProjectorModule())
+        registerBuiltinModules()
+        registerExternalModules()
     }
 
     fun start() {
@@ -64,5 +68,19 @@ class PlatformRuntime(
     fun stop() {
         layoutService.save()
         settingsService.save()
+    }
+
+    private fun registerBuiltinModules() {
+        moduleRegistry.register(WelcomeModule())
+    }
+
+    private fun registerExternalModules() {
+        pluginLoader.loadModules().forEach { module ->
+            runCatching {
+                moduleRegistry.register(module)
+            }.onFailure { error ->
+                println("Failed to load module ${module.metadata.id}: ${error.message}")
+            }
+        }
     }
 }
