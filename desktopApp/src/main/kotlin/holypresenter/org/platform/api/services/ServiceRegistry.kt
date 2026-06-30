@@ -2,20 +2,14 @@ package holypresenter.org.platform.api.services
 
 import kotlin.reflect.KClass
 
-class ServiceRegistry {
-    private val services = mutableMapOf<KClass<*>, HolyService>()
+interface ServiceRegistry {
 
-    fun <T : HolyService> register(
+    fun <T : Any> register(
         type: KClass<T>,
         service: T
-    ) {
-        services[type] = service
-    }
+    )
 
-    @Suppress("UNCHECKED_CAST")
-    fun <T : HolyService> get(
+    fun <T : Any> unregister(
         type: KClass<T>
-    ): T? {
-        return services[type] as? T
-    }
+    )
 }

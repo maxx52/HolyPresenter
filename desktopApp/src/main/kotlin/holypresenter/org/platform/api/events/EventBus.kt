@@ -1,16 +1,20 @@
 package holypresenter.org.platform.api.events
 
-class EventBus {
+class EventBus : Events {
     private val listeners = mutableMapOf<String, MutableList<(HolyEvent) -> Unit>>()
 
-    fun subscribe(
+    override fun subscribe(
         eventName: String,
-        listener: (HolyEvent) -> Unit
+        handler: (HolyEvent) -> Unit
     ) {
         val eventListeners = listeners.getOrPut(eventName) {
             mutableListOf()
         }
-        eventListeners.add(listener)
+        eventListeners.add(handler)
+    }
+
+    override fun unsubscribe(eventName: String) {
+        listeners.remove(eventName)
     }
 
     fun unsubscribe(
@@ -20,7 +24,7 @@ class EventBus {
         listeners[eventName]?.remove(listener)
     }
 
-    fun publish(event: HolyEvent) {
+    override fun publish(event: HolyEvent) {
         listeners[event.name]?.forEach { listener ->
             listener(event)
         }

@@ -1,10 +1,10 @@
-package holypresenter.org.platform.api.services
+package holypresenter.org.platform.services
 
+import holypresenter.org.platform.api.services.Services
 import kotlin.reflect.KClass
 
 class DefaultServiceRegistry :
-    ServiceRegistry,
-    ServiceProvider {
+    Services {
 
     private val services = mutableMapOf<KClass<*>, Any>()
 

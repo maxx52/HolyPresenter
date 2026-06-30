@@ -1,10 +1,10 @@
 package holypresenter.org.platform.api.commands
 
-class CommandBus {
+class CommandBus : Commands {
     private val handlers =
         mutableMapOf<String, MutableList<(HolyCommand) -> Unit>>()
 
-    fun <T : HolyCommand> register(
+    override fun <T : HolyCommand> register(
         commandName: String,
         handler: CommandHandler<T>
     ) {
@@ -18,7 +18,11 @@ class CommandBus {
         }
     }
 
-    fun execute(command: HolyCommand) {
+    override fun unregister(commandName: String) {
+        handlers.remove(commandName)
+    }
+
+    override fun execute(command: HolyCommand) {
         handlers[command.name]?.forEach { handler ->
             handler(command)
         }
