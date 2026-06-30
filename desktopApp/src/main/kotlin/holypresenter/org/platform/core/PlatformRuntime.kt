@@ -7,6 +7,7 @@ import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.services.ServiceRegistry
 import holypresenter.org.platform.layout.DefaultLayoutService
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
+import holypresenter.org.platform.path.DesktopPathService
 import holypresenter.org.platform.plugins.PluginLoader
 import holypresenter.org.platform.settings.DefaultSettingsService
 import holypresenter.org.platform.settings.repository.JsonSettingsRepository
@@ -19,6 +20,7 @@ class PlatformRuntime(
     val eventBus = EventBus()
     val commandBus = CommandBus()
     val services = ServiceRegistry()
+    private val pathService = DesktopPathService()
 
     val layoutService = DefaultLayoutService(
         repository = JsonLayoutRepository(
@@ -52,10 +54,11 @@ class PlatformRuntime(
     )
 
     private val pluginLoader = PluginLoader(
-        modulesDirectory = File(rootDirectory, "modules")
+        PlatformPaths.modules
     )
 
     init {
+        pathService.ensureDirectories()
         registerBuiltinModules()
         registerExternalModules()
     }

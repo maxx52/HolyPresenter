@@ -8,8 +8,10 @@ import java.util.ServiceLoader
 class PluginLoader(
     private val modulesDirectory: File
 ) {
-
     fun loadModules(): List<HolyModule> {
+        println("[PluginLoader] modules dir: ${modulesDirectory.absolutePath}")
+        println("[PluginLoader] exists: ${modulesDirectory.exists()}")
+
         if (!modulesDirectory.exists()) {
             modulesDirectory.mkdirs()
             return emptyList()
@@ -21,6 +23,8 @@ class PluginLoader(
             }
             ?.toList()
             ?: emptyList()
+
+        println("[PluginLoader] jars: ${jarFiles.map { it.name }}")
 
         if (jarFiles.isEmpty()) {
             return emptyList()
@@ -35,8 +39,12 @@ class PluginLoader(
             HolyModule::class.java.classLoader
         )
 
-        return ServiceLoader
+        val modules = ServiceLoader
             .load(HolyModule::class.java, classLoader)
             .toList()
+
+        println("[PluginLoader] loaded modules: ${modules.map { it.metadata.name }}")
+
+        return modules
     }
 }
