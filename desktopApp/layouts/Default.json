@@ -1,0 +1,10 @@
+{
+    "windows": [
+        {
+            "id": "main",
+            "x": 100,
+            "y": 50,
+            "isOpen": true
+        }
+    ]
+}
