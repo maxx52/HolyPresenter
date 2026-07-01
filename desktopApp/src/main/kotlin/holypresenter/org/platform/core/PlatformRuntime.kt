@@ -1,5 +1,6 @@
 package holypresenter.org.platform.core
 
+import holypresenter.org.modules.presentationtest.PresentationTestModule
 import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
@@ -77,6 +78,7 @@ class PlatformRuntime(
 
     private fun registerBuiltinModules() {
         moduleRegistry.register(WelcomeModule())
+        moduleRegistry.register(PresentationTestModule())
     }
 
     private fun registerExternalModules() {
