@@ -8,5 +8,6 @@ data class ModuleMetadata(
     val description: String = "",
     val minCoreVersion: String = "1.0.0",
     val dependencies: List<String> = emptyList(),
-    val apiVersion: String
+    val apiVersion: String,
+    val icon: String = "📦"
 )
