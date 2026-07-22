@@ -1,9 +1,9 @@
 package holypresenter.org.platform.layout
 
 import holypresenter.org.platform.layout.repository.InMemoryLayoutRepository
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNull
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class DefaultLayoutServiceTest {
 

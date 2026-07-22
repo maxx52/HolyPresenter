@@ -3,9 +3,7 @@ package holypresenter.org.platform.services
 import holypresenter.org.platform.api.services.Services
 import kotlin.reflect.KClass
 
-class DefaultServiceRegistry :
-    Services {
-
+class DefaultServiceRegistry : Services {
     private val services = mutableMapOf<KClass<*>, Any>()
 
     override fun <T : Any> register(

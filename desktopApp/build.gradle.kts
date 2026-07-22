@@ -21,8 +21,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.junit.junit)
     testImplementation(kotlin("test"))
-    implementation(kotlin("test"))
     implementation(project(":platform-api"))
+    implementation(libs.vlcj)
 }
 
 compose.desktop {

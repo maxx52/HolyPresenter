@@ -1,8 +1,8 @@
 package holypresenter.org.platform.settings
 
 import holypresenter.org.platform.settings.repository.InMemorySettingsRepository
+import junit.framework.Assert.assertEquals
 import org.junit.Test
-import kotlin.test.assertEquals
 
 class DefaultSettingsServiceTest {
 

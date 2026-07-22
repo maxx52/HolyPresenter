@@ -5,6 +5,10 @@ import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
 import holypresenter.org.platform.api.module.ModuleContext
+import holypresenter.org.platform.api.planner.DefaultPlannerService
+import holypresenter.org.platform.api.planner.PlannerService
+import holypresenter.org.platform.video.DefaultVideoPlaybackService
+import holypresenter.org.platform.api.video.VideoPlaybackService
 import holypresenter.org.platform.services.DefaultServiceRegistry
 import holypresenter.org.platform.layout.DefaultLayoutService
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
@@ -22,6 +26,7 @@ class PlatformRuntime(
     val commandBus = CommandBus()
     private val pathService = DesktopPathService()
     val serviceRegistry = DefaultServiceRegistry()
+    private val videoPlaybackService = DefaultVideoPlaybackService()
 
     val moduleRegistry = ModuleRegistry(
         context = ModuleContext(
@@ -60,7 +65,20 @@ class PlatformRuntime(
         pathService.modules
     )
 
+    private fun registerServices() {
+        serviceRegistry.register(
+            PlannerService::class,
+            DefaultPlannerService()
+        )
+
+        serviceRegistry.register(
+            VideoPlaybackService::class,
+            videoPlaybackService
+        )
+    }
+
     init {
+        registerServices()
         pathService.ensureDirectories()
         registerBuiltinModules()
         registerExternalModules()
@@ -69,9 +87,15 @@ class PlatformRuntime(
     fun start() {
         layoutService.load("Default")
         settingsService.load()
+        val videoService = serviceRegistry.get(VideoPlaybackService::class)
+
+        println(
+            "Video service registered: ${videoService != null}"
+        )
     }
 
     fun stop() {
+        videoPlaybackService.release()
         layoutService.save()
         settingsService.save()
     }

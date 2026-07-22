@@ -1,9 +1,9 @@
 package holypresenter.org.platform.layout
 
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
+import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.nio.file.Files
-import kotlin.test.assertEquals
 
 class JsonLayoutRepositoryTest {
 
