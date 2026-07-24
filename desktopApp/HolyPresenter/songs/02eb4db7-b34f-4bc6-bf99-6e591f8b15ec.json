@@ -1,0 +1,64 @@
+{
+    "id": "02eb4db7-b34f-4bc6-bf99-6e591f8b15ec",
+    "metadata": {
+        "title": "Тест 1",
+        "author": "",
+        "copyright": null,
+        "ccli": null,
+        "language": null,
+        "tags": []
+    },
+    "sections": [
+        {
+            "id": "feec0026-ed58-406e-9c88-73d8dab13fb2",
+            "type": "VERSE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "a357b9b6-3138-441f-bb14-179490c73e33",
+                    "lines": [
+                        "вапрвлапорв"
+                    ]
+                },
+                {
+                    "id": "dab0659c-191a-44bf-a8c2-6f01f86b3ae2",
+                    "lines": [
+                        "уфкреонапонр"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ce36da6a-081d-43cb-bf45-b329290250f9",
+            "type": "BRIDGE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "83df14ed-ac06-447d-83c3-ce20716deedb",
+                    "lines": [
+                        "цуукреоа"
+                    ]
+                }
+            ]
+        }
+    ],
+    "theme": {
+        "background": {
+            "type": "org.holypresenter_songs.domain.SongBackground.Image",
+            "path": "C:\\Users\\gospe\\OneDrive\\Документы\\favicon.jpg"
+        },
+        "textStyle": {
+            "fontFamily": null,
+            "fontSize": 64,
+            "textColor": 4294967295,
+            "bold": false,
+            "italic": false,
+            "outlineEnabled": true,
+            "shadowEnabled": true
+        },
+        "overlay": {
+            "enabled": true,
+            "opacity": 0.45
+        }
+    }
+}

@@ -1,0 +1,51 @@
+{
+    "id": "2d0b72d0-f416-4b84-a6fc-5c018d553895",
+    "metadata": {
+        "title": "У креста",
+        "author": "",
+        "copyright": null,
+        "ccli": null,
+        "language": null,
+        "tags": []
+    },
+    "sections": [
+        {
+            "id": "da9d42e2-f8e8-4713-b377-9f52cb22a564",
+            "type": "VERSE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "67b44274-cb72-4156-93f2-2f71f78a1e98",
+                    "lines": [
+                        "парарар"
+                    ]
+                },
+                {
+                    "id": "c469e773-b48d-437d-8b3b-9d1c112a201b",
+                    "lines": [
+                        "уаукерыкп"
+                    ]
+                }
+            ]
+        }
+    ],
+    "theme": {
+        "background": {
+            "type": "org.holypresenter_songs.domain.SongBackground.Video",
+            "path": "D:\\Фильмы, Проповеди\\90minut.mp4"
+        },
+        "textStyle": {
+            "fontFamily": null,
+            "fontSize": 120,
+            "textColor": 4294967295,
+            "bold": false,
+            "italic": false,
+            "outlineEnabled": true,
+            "shadowEnabled": true
+        },
+        "overlay": {
+            "enabled": true,
+            "opacity": 0.45
+        }
+    }
+}
