@@ -1,16 +1,14 @@
 package holypresenter.org.platform.api.projection
 
-import holypresenter.org.platform.api.presentation.Presentation
-import holypresenter.org.platform.api.presentation.PresentationSlide
+import kotlinx.coroutines.flow.StateFlow
 
 interface ProjectionService {
-    val currentPresentation: Presentation?
-    val currentSlideIndex: Int
-    val currentSlide: PresentationSlide?
+    val state: StateFlow<ProjectionState>
 
-    fun present(presentation: Presentation)
-    fun next()
-    fun previous()
-    fun goTo(index: Int)
+    fun show(
+        content: ProjectionContent
+    )
+
     fun clear()
+    fun close()
 }
