@@ -1,6 +1,9 @@
 package holypresenter.org.platform.projection
 
-import holypresenter.org.platform.api.projection.ProjectionBackgroundType
+import holypresenter.org.platform.api.presentation.element.TextElement
+import holypresenter.org.platform.api.presentation.theme.PresentationBackgroundType
+import holypresenter.org.platform.api.presentation.theme.PresentationTextStyle
+import holypresenter.org.platform.api.presentation.theme.PresentationTheme
 import holypresenter.org.platform.api.projection.ProjectionContent
 import java.awt.Color
 import java.awt.Font
@@ -87,7 +90,6 @@ internal class ProjectionWindow(
             frame.setSize(960, 540)
             frame.setLocationRelativeTo(null)
         }
-
         frame.isVisible = true
         frame.validate()
         frame.toFront()
@@ -106,9 +108,7 @@ internal class ProjectionWindow(
 }
 
 private class ProjectionPanel : JPanel() {
-    private var content: ProjectionContent =
-        ProjectionContent.Empty
-
+    private var content: ProjectionContent = ProjectionContent.Empty
     private var backgroundImage: BufferedImage? = null
 
     init {
@@ -120,7 +120,8 @@ private class ProjectionPanel : JPanel() {
         content: ProjectionContent
     ) {
         this.content = content
-        backgroundImage = loadBackgroundImage(content)
+        backgroundImage =
+            loadBackgroundImage(content)
         repaint()
     }
 
@@ -132,42 +133,102 @@ private class ProjectionPanel : JPanel() {
         val graphics2D = graphics.create() as Graphics2D
 
         try {
-            graphics2D.setRenderingHint(
-                RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON
-            )
-
-            graphics2D.setRenderingHint(
-                RenderingHints.KEY_TEXT_ANTIALIASING,
-                RenderingHints.VALUE_TEXT_ANTIALIAS_ON
-            )
-
-            graphics2D.color = Color.BLACK
-            graphics2D.fillRect(
-                0,
-                0,
-                width,
-                height
-            )
+            configureRendering(graphics2D)
+            clearCanvas(graphics2D)
 
             when (val current = content) {
                 ProjectionContent.Empty -> Unit
-
-                is ProjectionContent.Slide -> {
-                    drawBackground(graphics2D)
-                    drawText(
+                ProjectionContent.BlackScreen -> Unit
+                ProjectionContent.Logo -> Unit
+                is ProjectionContent.Slide ->
+                    drawSlide(
                         graphics = graphics2D,
-                        text = current.text
+                        content = current
                     )
-                }
-                else -> {}
             }
         } finally {
             graphics2D.dispose()
         }
     }
 
+    private fun configureRendering(
+        graphics: Graphics2D
+    ) {
+        graphics.setRenderingHint(
+            RenderingHints.KEY_ANTIALIASING,
+            RenderingHints.VALUE_ANTIALIAS_ON
+        )
+
+        graphics.setRenderingHint(
+            RenderingHints.KEY_TEXT_ANTIALIASING,
+            RenderingHints.VALUE_TEXT_ANTIALIAS_ON
+        )
+
+        graphics.setRenderingHint(
+            RenderingHints.KEY_INTERPOLATION,
+            RenderingHints.VALUE_INTERPOLATION_BICUBIC
+        )
+    }
+
+    private fun clearCanvas(
+        graphics: Graphics2D
+    ) {
+        graphics.color = Color.BLACK
+        graphics.fillRect(0, 0, width, height)
+    }
+
+    private fun drawSlide(
+        graphics: Graphics2D,
+        content: ProjectionContent.Slide
+    ) {
+        val slide = content.slide ?: return
+        val theme = content.presentation.theme
+
+        drawBackground(graphics, theme)
+        drawOverlay(graphics, theme)
+
+        val text = slide.elements
+            .asSequence()
+            .filter { it.visible }
+            .sortedBy { it.zIndex }
+            .filterIsInstance<TextElement>()
+            .joinToString("\n") { element -> element.text }
+
+        drawText(
+            graphics = graphics,
+            text = text,
+            style = theme.textStyle
+        )
+    }
+
     private fun drawBackground(
+        graphics: Graphics2D,
+        theme: PresentationTheme
+    ) {
+        when (theme.background.type) {
+            PresentationBackgroundType.COLOR -> {
+                graphics.color = theme
+                    .background
+                    .color
+                    ?.toAwtColor()
+                    ?: Color.BLACK
+                graphics.fillRect(0, 0, width, height)
+            }
+
+            PresentationBackgroundType.IMAGE -> {
+                drawBackgroundImage(graphics)
+            }
+
+            PresentationBackgroundType.VIDEO -> {
+                /*
+                 * Видео будет подключено через уже существующий
+                 * VideoPlaybackService на следующем этапе.
+                 */
+            }
+        }
+    }
+
+    private fun drawBackgroundImage(
         graphics: Graphics2D
     ) {
         val image = backgroundImage ?: return
@@ -177,12 +238,8 @@ private class ProjectionPanel : JPanel() {
             height.toDouble() / image.height
         )
 
-        val targetWidth =
-            (image.width * scale).toInt()
-
-        val targetHeight =
-            (image.height * scale).toInt()
-
+        val targetWidth = (image.width * scale).toInt()
+        val targetHeight = (image.height * scale).toInt()
         val x = (width - targetWidth) / 2
         val y = (height - targetHeight) / 2
 
@@ -196,47 +253,96 @@ private class ProjectionPanel : JPanel() {
         )
     }
 
+    private fun drawOverlay(
+        graphics: Graphics2D,
+        theme: PresentationTheme
+    ) {
+        val overlay = theme.overlay
+
+        if (!overlay.enabled) return
+
+        val opacity = overlay.opacity.coerceIn(0f, 1f)
+
+        if (opacity <= 0f) return
+
+        val alpha = (opacity * 255).toInt()
+
+        graphics.color = Color(0, 0, 0, alpha)
+
+        graphics.fillRect(
+            0,
+            0,
+            width,
+            height
+        )
+    }
+
     private fun drawText(
         graphics: Graphics2D,
-        text: String
+        text: String,
+        style: PresentationTextStyle
     ) {
         if (text.isBlank()) return
 
         graphics.font = Font(
-            Font.SANS_SERIF,
-            Font.BOLD,
-            64
+            style.fontFamily
+                ?.takeIf(String::isNotBlank)
+                ?: Font.SANS_SERIF,
+            style.toFontStyle(),
+            style.fontSize.coerceAtLeast(12)
         )
 
         val lines = text.lines()
         val metrics = graphics.fontMetrics
         val lineHeight = metrics.height
         val totalHeight = lines.size * lineHeight
-
-        var y =
-            (height - totalHeight) / 2 +
-                    metrics.ascent
+        var y = (height - totalHeight) / 2 + metrics.ascent
 
         lines.forEach { line ->
-            val x =
-                (width - metrics.stringWidth(line)) / 2
+            val x = (width - metrics.stringWidth(line)) / 2
 
-            drawTextOutline(
-                graphics = graphics,
-                text = line,
-                x = x,
-                y = y
-            )
+            if (style.shadowEnabled) {
+                drawTextShadow(
+                    graphics = graphics,
+                    text = line,
+                    x = x,
+                    y = y
+                )
+            }
 
-            graphics.color = Color.WHITE
+            if (style.outlineEnabled) {
+                drawTextOutline(
+                    graphics = graphics,
+                    text = line,
+                    x = x,
+                    y = y
+                )
+            }
+
+            graphics.color = style.textColor.toAwtColor()
+
             graphics.drawString(
                 line,
                 x,
                 y
             )
-
             y += lineHeight
         }
+    }
+
+    private fun drawTextShadow(
+        graphics: Graphics2D,
+        text: String,
+        x: Int,
+        y: Int
+    ) {
+        graphics.color = Color(0, 0, 0, 170)
+
+        graphics.drawString(
+            text,
+            x + 4,
+            y + 4
+        )
     }
 
     private fun drawTextOutline(
@@ -249,7 +355,10 @@ private class ProjectionPanel : JPanel() {
 
         for (offsetX in -2..2) {
             for (offsetY in -2..2) {
-                if (offsetX == 0 && offsetY == 0) {
+                if (
+                    offsetX == 0 &&
+                    offsetY == 0
+                ) {
                     continue
                 }
 
@@ -265,21 +374,23 @@ private class ProjectionPanel : JPanel() {
     private fun loadBackgroundImage(
         content: ProjectionContent
     ): BufferedImage? {
-        val slide =
-            content as? ProjectionContent.Slide
-                ?: return null
+        val slideContent = content as? ProjectionContent.Slide ?: return null
+
+        val background = slideContent
+                .presentation
+                .theme
+                .background
 
         if (
-            slide.backgroundType !=
-            ProjectionBackgroundType.IMAGE
+            background.type !=
+            PresentationBackgroundType.IMAGE
         ) {
             return null
         }
 
-        val path =
-            slide.backgroundPath
-                ?.takeIf(String::isNotBlank)
-                ?: return null
+        val path = background.path
+            ?.takeIf(String::isNotBlank)
+            ?: return null
 
         return runCatching {
             val file = File(path)
@@ -292,3 +403,13 @@ private class ProjectionPanel : JPanel() {
         }.getOrNull()
     }
 }
+
+private fun PresentationTextStyle.toFontStyle(): Int =
+    when {
+        bold && italic -> Font.BOLD or Font.ITALIC
+        bold -> Font.BOLD
+        italic -> Font.ITALIC
+        else -> Font.PLAIN
+    }
+
+private fun Long.toAwtColor(): Color = Color(toInt(), true)

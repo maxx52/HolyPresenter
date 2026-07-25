@@ -11,7 +11,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import holypresenter.org.platform.api.module.ModuleContext
-import holypresenter.org.platform.api.projection.ProjectionBackgroundType
+import holypresenter.org.platform.api.presentation.Presentation
+import holypresenter.org.platform.api.presentation.PresentationMetadata
+import holypresenter.org.platform.api.presentation.PresentationSlide
+import holypresenter.org.platform.api.presentation.SlotId
+import holypresenter.org.platform.api.presentation.element.TextElement
+import holypresenter.org.platform.api.presentation.theme.PresentationBackground
+import holypresenter.org.platform.api.presentation.theme.PresentationBackgroundType
+import holypresenter.org.platform.api.presentation.theme.PresentationOverlay
+import holypresenter.org.platform.api.presentation.theme.PresentationTextStyle
+import holypresenter.org.platform.api.presentation.theme.PresentationTheme
 import holypresenter.org.platform.api.projection.ProjectionContent
 import holypresenter.org.platform.api.projection.ProjectionService
 
@@ -22,6 +31,56 @@ fun PresentationTestWorkspace(
     val projectionService = remember(context) {
         context.services.get(
             ProjectionService::class
+        )
+    }
+
+    val testPresentation = remember {
+        Presentation(
+            id = "test-presentation",
+            metadata = PresentationMetadata(
+                title = "Тестовая презентация"
+            ),
+            theme = PresentationTheme(
+                background = PresentationBackground(
+                    type =
+                        PresentationBackgroundType.COLOR,
+                    color = 0xFF202124
+                ),
+                textStyle = PresentationTextStyle(
+                    fontSize = 64,
+                    textColor = 0xFFFFFFFF,
+                    bold = true,
+                    outlineEnabled = true,
+                    shadowEnabled = true
+                ),
+                overlay = PresentationOverlay(
+                    enabled = false
+                )
+            ),
+            slides = listOf(
+                PresentationSlide(
+                    id = "test-slide-1",
+                    elements = listOf(
+                        TextElement(
+                            id = "test-text-1",
+                            slot = SlotId("main"),
+                            text =
+                                "HolyPresenter\nработает!"
+                        )
+                    )
+                ),
+                PresentationSlide(
+                    id = "test-slide-2",
+                    elements = listOf(
+                        TextElement(
+                            id = "test-text-2",
+                            slot = SlotId("main"),
+                            text =
+                                "Второй слайд\nиз Presentation"
+                        )
+                    )
+                )
+            )
         )
     }
 
@@ -37,19 +96,29 @@ fun PresentationTestWorkspace(
             onClick = {
                 projectionService?.show(
                     ProjectionContent.Slide(
-                        presentationId =
-                            "test-presentation",
-                        slideId =
-                            "test-slide",
-                        text =
-                            "HolyPresenter\nработает!",
-                        backgroundType =
-                            ProjectionBackgroundType.NONE
+                        presentation =
+                            testPresentation,
+                        slideIndex = 0
                     )
                 )
             }
         ) {
-            Text("Показать тестовый слайд")
+            Text("Показать первый слайд")
+        }
+
+        Button(
+            enabled = projectionService != null,
+            onClick = {
+                projectionService?.show(
+                    ProjectionContent.Slide(
+                        presentation =
+                            testPresentation,
+                        slideIndex = 1
+                    )
+                )
+            }
+        ) {
+            Text("Показать второй слайд")
         }
 
         OutlinedButton(
@@ -71,7 +140,9 @@ fun PresentationTestWorkspace(
         }
 
         if (projectionService == null) {
-            Text("ProjectionService не зарегистрирован")
+            Text(
+                "ProjectionService не зарегистрирован"
+            )
         }
     }
 }
