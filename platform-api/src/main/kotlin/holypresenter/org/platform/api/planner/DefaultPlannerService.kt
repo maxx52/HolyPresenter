@@ -21,4 +21,12 @@ class DefaultPlannerService : PlannerService {
     override fun clear() {
         state.clear()
     }
+
+    override fun setActive(index: Int) {
+        state.setActive(index)
+    }
+
+    override fun clearActive() {
+        state.clearActive()
+    }
 }

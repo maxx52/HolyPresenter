@@ -1,9 +1,14 @@
 package holypresenter.org.platform.api.planner
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 class PlannerState {
     val items = mutableStateListOf<PlannerItem>()
+    var activeItemIndex by mutableStateOf<Int?>(null)
+        private set
 
     fun add(item: PlannerItem) {
         items += item
@@ -27,5 +32,14 @@ class PlannerState {
 
     fun clear() {
         items.clear()
+    }
+
+    fun setActive(index: Int) {
+        if (index !in items.indices) return
+        activeItemIndex = index
+    }
+
+    fun clearActive() {
+        activeItemIndex = null
     }
 }

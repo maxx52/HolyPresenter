@@ -27,6 +27,19 @@
                     ]
                 }
             ]
+        },
+        {
+            "id": "dd0421b7-5861-4aef-972b-619274c02d76",
+            "type": "VERSE",
+            "number": 2,
+            "slides": [
+                {
+                    "id": "aac8f9cb-e1c0-4155-9ccb-9a12b0e9db61",
+                    "lines": [
+                        ""
+                    ]
+                }
+            ]
         }
     ],
     "theme": {

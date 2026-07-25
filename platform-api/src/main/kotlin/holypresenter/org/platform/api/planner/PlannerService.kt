@@ -4,7 +4,6 @@ interface PlannerService {
     val state: PlannerState
 
     fun add(item: PlannerItem)
-
     fun remove(item: PlannerItem)
 
     fun move(
@@ -13,4 +12,6 @@ interface PlannerService {
     )
 
     fun clear()
+    fun setActive(index: Int)
+    fun clearActive()
 }
