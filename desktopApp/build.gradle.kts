@@ -20,6 +20,7 @@ dependencies {
     implementation(libs.compose.uiToolingPreview)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.junit.junit)
+    implementation(libs.androidx.tracing.desktop)
     testImplementation(kotlin("test"))
     implementation(project(":platform-api"))
     implementation(libs.vlcj)

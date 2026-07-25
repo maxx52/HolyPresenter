@@ -5,6 +5,7 @@ import holypresenter.org.platform.api.presentation.theme.PresentationBackgroundT
 import holypresenter.org.platform.api.presentation.theme.PresentationTextStyle
 import holypresenter.org.platform.api.presentation.theme.PresentationTheme
 import holypresenter.org.platform.api.projection.ProjectionContent
+import holypresenter.org.platform.projection.layout.DefaultSlotFrameResolver
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics
@@ -23,6 +24,9 @@ import javax.swing.KeyStroke
 import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
 import kotlin.math.max
+import holypresenter.org.platform.api.presentation.geometry.Frame
+import java.awt.Rectangle
+import kotlin.math.roundToInt
 
 internal class ProjectionWindow(
     private val onClose: () -> Unit
@@ -187,18 +191,21 @@ private class ProjectionPanel : JPanel() {
         drawBackground(graphics, theme)
         drawOverlay(graphics, theme)
 
-        val text = slide.elements
+        slide.elements
             .asSequence()
             .filter { it.visible }
             .sortedBy { it.zIndex }
             .filterIsInstance<TextElement>()
-            .joinToString("\n") { element -> element.text }
-
-        drawText(
-            graphics = graphics,
-            text = text,
-            style = theme.textStyle
-        )
+            .forEach { element ->
+                drawText(
+                    graphics = graphics,
+                    text = element.text,
+                    style = theme.textStyle,
+                    frame = DefaultSlotFrameResolver.resolve(
+                        element.slot
+                    )
+                )
+            }
     }
 
     private fun drawBackground(
@@ -280,9 +287,22 @@ private class ProjectionPanel : JPanel() {
     private fun drawText(
         graphics: Graphics2D,
         text: String,
-        style: PresentationTextStyle
+        style: PresentationTextStyle,
+        frame: Frame
     ) {
         if (text.isBlank()) return
+
+        val bounds = frame.toRectangle(
+            canvasWidth = width,
+            canvasHeight = height
+        )
+
+        if (
+            bounds.width <= 0 ||
+            bounds.height <= 0
+        ) {
+            return
+        }
 
         graphics.font = Font(
             style.fontFamily
@@ -296,37 +316,42 @@ private class ProjectionPanel : JPanel() {
         val metrics = graphics.fontMetrics
         val lineHeight = metrics.height
         val totalHeight = lines.size * lineHeight
-        var y = (height - totalHeight) / 2 + metrics.ascent
+        var y = bounds.y + (bounds.height - totalHeight) / 2 + metrics.ascent
+        val previousClip = graphics.clip
 
-        lines.forEach { line ->
-            val x = (width - metrics.stringWidth(line)) / 2
+        try {
+            graphics.clip = bounds
+            lines.forEach { line ->
+                val x = bounds.x + (bounds.width - metrics.stringWidth(line)) / 2
 
-            if (style.shadowEnabled) {
-                drawTextShadow(
-                    graphics = graphics,
-                    text = line,
-                    x = x,
-                    y = y
+                if (style.shadowEnabled) {
+                    drawTextShadow(
+                        graphics = graphics,
+                        text = line,
+                        x = x,
+                        y = y
+                    )
+                }
+
+                if (style.outlineEnabled) {
+                    drawTextOutline(
+                        graphics = graphics,
+                        text = line,
+                        x = x,
+                        y = y
+                    )
+                }
+                graphics.color = style.textColor.toAwtColor()
+
+                graphics.drawString(
+                    line,
+                    x,
+                    y
                 )
+                y += lineHeight
             }
-
-            if (style.outlineEnabled) {
-                drawTextOutline(
-                    graphics = graphics,
-                    text = line,
-                    x = x,
-                    y = y
-                )
-            }
-
-            graphics.color = style.textColor.toAwtColor()
-
-            graphics.drawString(
-                line,
-                x,
-                y
-            )
-            y += lineHeight
+        } finally {
+            graphics.clip = previousClip
         }
     }
 
@@ -413,3 +438,20 @@ private fun PresentationTextStyle.toFontStyle(): Int =
     }
 
 private fun Long.toAwtColor(): Color = Color(toInt(), true)
+
+private fun Frame.toRectangle(
+    canvasWidth: Int,
+    canvasHeight: Int
+): Rectangle {
+    val normalizedX = x.coerceIn(0f, 1f)
+    val normalizedY = y.coerceIn(0f, 1f)
+    val normalizedWidth = width.coerceIn(0f, 1f - normalizedX)
+    val normalizedHeight = height.coerceIn(0f, 1f - normalizedY)
+
+    return Rectangle(
+        (normalizedX * canvasWidth).roundToInt(),
+        (normalizedY * canvasHeight).roundToInt(),
+        (normalizedWidth * canvasWidth).roundToInt(),
+        (normalizedHeight * canvasHeight).roundToInt()
+    )
+}

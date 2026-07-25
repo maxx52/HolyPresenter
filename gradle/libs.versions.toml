@@ -8,6 +8,7 @@ material3 = "1.11.0-alpha07"
 kotlinxSerialization = "1.9.0"
 junitVersion = "4.12"
 vlcj = "4.11.0"
+tracingDesktop = "2.0.0-beta01"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -26,6 +27,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 junit-junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
+androidx-tracing-desktop = { group = "androidx.tracing", name = "tracing-desktop", version.ref = "tracingDesktop" }
 
 
 [plugins]
