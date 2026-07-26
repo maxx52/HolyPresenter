@@ -1,6 +1,7 @@
 package holypresenter.org.platform.video
 
 import holypresenter.org.platform.api.video.VideoOverlayContent
+import holypresenter.org.platform.window.showOnProjectorScreen
 import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent
 import java.awt.BorderLayout
 import java.awt.Color
@@ -63,29 +64,9 @@ class VideoWindow {
     }
 
     private fun showOnProjector() {
-        val devices = GraphicsEnvironment
-            .getLocalGraphicsEnvironment()
-            .screenDevices
-
-        if (devices.size > 1) {
-            val bounds = devices[1]
-                .defaultConfiguration
-                .bounds
-
-            frame.dispose()
-            frame.isUndecorated = true
-            frame.isAlwaysOnTop = true
-            frame.bounds = bounds
-        } else {
-            frame.dispose()
-            frame.isUndecorated = false
-            frame.isAlwaysOnTop = false
-            frame.setSize(960, 540)
-            frame.setLocationRelativeTo(null)
+        if (!frame.isVisible) {
+            frame.showOnProjectorScreen()
         }
-        frame.isVisible = true
-        frame.validate()
-        frame.toFront()
     }
 
     fun play(

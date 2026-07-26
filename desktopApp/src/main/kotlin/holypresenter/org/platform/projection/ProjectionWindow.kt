@@ -10,7 +10,6 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics
 import java.awt.Graphics2D
-import java.awt.GraphicsEnvironment
 import java.awt.RenderingHints
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
@@ -25,6 +24,7 @@ import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
 import kotlin.math.max
 import holypresenter.org.platform.api.presentation.geometry.Frame
+import holypresenter.org.platform.window.showOnProjectorScreen
 import java.awt.Rectangle
 import kotlin.math.roundToInt
 
@@ -62,8 +62,16 @@ internal class ProjectionWindow(
         content: ProjectionContent
     ) {
         runOnSwingThread {
-            projectionPanel.updateContent(content)
-            showOnProjector()
+            projectionPanel.updateContent(
+                content
+            )
+            /*
+             * При переключении слайдов окно уже существует.
+             * Повторно вызывать dispose() не нужно.
+             */
+            if (!frame.isVisible) {
+                frame.showOnProjectorScreen()
+            }
         }
     }
 
@@ -71,33 +79,6 @@ internal class ProjectionWindow(
         runOnSwingThread {
             frame.isVisible = false
         }
-    }
-
-    private fun showOnProjector() {
-        val devices = GraphicsEnvironment
-            .getLocalGraphicsEnvironment()
-            .screenDevices
-
-        frame.dispose()
-
-        if (devices.size > 1) {
-            val projectorBounds = devices[1]
-                .defaultConfiguration
-                .bounds
-
-            frame.isUndecorated = true
-            frame.isAlwaysOnTop = true
-            frame.bounds = projectorBounds
-        } else {
-            frame.isUndecorated = false
-            frame.isAlwaysOnTop = false
-            frame.setSize(960, 540)
-            frame.setLocationRelativeTo(null)
-        }
-        frame.isVisible = true
-        frame.validate()
-        frame.toFront()
-        frame.requestFocus()
     }
 
     private fun runOnSwingThread(

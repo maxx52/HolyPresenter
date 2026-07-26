@@ -6,6 +6,7 @@ interface ProjectionService {
     val state: StateFlow<ProjectionState>
 
     fun show(content: ProjectionContent)
+    fun toggleBlackScreen()
     fun clear()
     fun close()
 }

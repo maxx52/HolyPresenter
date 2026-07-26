@@ -30,6 +30,8 @@ class PlatformRuntime(
     val serviceRegistry = DefaultServiceRegistry()
     private val videoPlaybackService = DefaultVideoPlaybackService()
 
+    private val projectionService = DefaultProjectionService(videoPlaybackService)
+
     val moduleRegistry = ModuleRegistry(
         context = ModuleContext(
             commands = commandBus,
@@ -83,8 +85,6 @@ class PlatformRuntime(
             projectionService
         )
     }
-
-    private val projectionService = DefaultProjectionService()
 
     init {
         registerServices()
