@@ -70,6 +70,9 @@ class DefaultVideoPlaybackService : VideoPlaybackService {
     }
 
     override fun stop() {
+        if (currentState.status == VideoPlaybackStatus.STOPPED) {
+            return
+        }
         videoWindow.stop()
         currentState = VideoPlaybackState()
     }
