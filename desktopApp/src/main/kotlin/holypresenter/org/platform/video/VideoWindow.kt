@@ -5,7 +5,6 @@ import holypresenter.org.platform.window.showOnProjectorScreen
 import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent
 import java.awt.BorderLayout
 import java.awt.Color
-import java.awt.GraphicsEnvironment
 import java.awt.Rectangle
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
