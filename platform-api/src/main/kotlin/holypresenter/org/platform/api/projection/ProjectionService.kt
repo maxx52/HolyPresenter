@@ -7,6 +7,7 @@ interface ProjectionService {
 
     fun show(content: ProjectionContent)
     fun toggleBlackScreen()
+    fun toggleTextVisibility()
     fun clear()
     fun close()
 }

@@ -24,7 +24,7 @@ publishing {
 
             groupId = "org.holypresenter"
             artifactId = "platform-api"
-            version = "0.2.0"
+            version = "0.3.0"
         }
     }
 }

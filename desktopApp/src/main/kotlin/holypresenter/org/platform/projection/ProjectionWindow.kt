@@ -59,16 +59,15 @@ internal class ProjectionWindow(
     }
 
     fun show(
-        content: ProjectionContent
+        content: ProjectionContent,
+        textVisible: Boolean
     ) {
         runOnSwingThread {
             projectionPanel.updateContent(
-                content
+                content = content,
+                textVisible = textVisible
             )
-            /*
-             * При переключении слайдов окно уже существует.
-             * Повторно вызывать dispose() не нужно.
-             */
+
             if (!frame.isVisible) {
                 frame.showOnProjectorScreen()
             }
@@ -92,7 +91,7 @@ internal class ProjectionWindow(
     }
 }
 
-private class ProjectionPanel : JPanel() {
+private class ProjectionPanel(private var textVisible: Boolean = true) : JPanel() {
     private var content: ProjectionContent = ProjectionContent.Empty
     private var backgroundImage: BufferedImage? = null
 
@@ -102,11 +101,13 @@ private class ProjectionPanel : JPanel() {
     }
 
     fun updateContent(
-        content: ProjectionContent
+        content: ProjectionContent,
+        textVisible: Boolean
     ) {
         this.content = content
-        backgroundImage =
-            loadBackgroundImage(content)
+        this.textVisible = textVisible
+
+        backgroundImage = loadBackgroundImage(content)
         repaint()
     }
 
@@ -166,11 +167,21 @@ private class ProjectionPanel : JPanel() {
         graphics: Graphics2D,
         content: ProjectionContent.Slide
     ) {
-        val slide = content.slide ?: return
         val theme = content.presentation.theme
-
+        /*
+         * Фон и затемнение рисуются всегда.
+         */
         drawBackground(graphics, theme)
         drawOverlay(graphics, theme)
+        /*
+         * При скрытом тексте заканчиваем отрисовку,
+         * оставляя фон на экране.
+         */
+        if (!textVisible) {
+            return
+        }
+
+        val slide = content.slide ?: return
 
         slide.elements
             .asSequence()
@@ -182,9 +193,8 @@ private class ProjectionPanel : JPanel() {
                     graphics = graphics,
                     text = element.text,
                     style = theme.textStyle,
-                    frame = DefaultSlotFrameResolver.resolve(
-                        element.slot
-                    )
+                    frame =
+                        DefaultSlotFrameResolver.resolve(element.slot)
                 )
             }
     }

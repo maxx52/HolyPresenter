@@ -3,5 +3,6 @@ package holypresenter.org.platform.api.projection
 data class ProjectionState(
     val content: ProjectionContent = ProjectionContent.Empty,
     val isOpen: Boolean = false,
-    val visible: Boolean = false
+    val visible: Boolean = false,
+    val textVisible: Boolean = true
 )
