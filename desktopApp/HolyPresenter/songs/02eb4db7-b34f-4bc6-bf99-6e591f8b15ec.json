@@ -10,6 +10,19 @@
     },
     "sections": [
         {
+            "id": "ce36da6a-081d-43cb-bf45-b329290250f9",
+            "type": "BRIDGE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "83df14ed-ac06-447d-83c3-ce20716deedb",
+                    "lines": [
+                        "цуукреоа"
+                    ]
+                }
+            ]
+        },
+        {
             "id": "feec0026-ed58-406e-9c88-73d8dab13fb2",
             "type": "VERSE",
             "number": 1,
@@ -24,19 +37,6 @@
                     "id": "dab0659c-191a-44bf-a8c2-6f01f86b3ae2",
                     "lines": [
                         "уфкреонапонр"
-                    ]
-                }
-            ]
-        },
-        {
-            "id": "ce36da6a-081d-43cb-bf45-b329290250f9",
-            "type": "BRIDGE",
-            "number": 1,
-            "slides": [
-                {
-                    "id": "83df14ed-ac06-447d-83c3-ce20716deedb",
-                    "lines": [
-                        "цуукреоа"
                     ]
                 }
             ]

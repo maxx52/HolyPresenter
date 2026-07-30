@@ -14,6 +14,8 @@ import holypresenter.org.platform.services.DefaultServiceRegistry
 import holypresenter.org.platform.layout.DefaultLayoutService
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
 import holypresenter.org.platform.path.DesktopPathService
+import holypresenter.org.platform.planner.JsonPlannerRepository
+import holypresenter.org.platform.planner.PersistentPlannerService
 import holypresenter.org.platform.plugins.PluginLoader
 import holypresenter.org.platform.projection.DefaultProjectionService
 import holypresenter.org.platform.settings.DefaultSettingsService
@@ -29,8 +31,17 @@ class PlatformRuntime(
     private val pathService = DesktopPathService()
     val serviceRegistry = DefaultServiceRegistry()
     private val videoPlaybackService = DefaultVideoPlaybackService()
-
     private val projectionService = DefaultProjectionService(videoPlaybackService)
+
+    private val plannerService =
+        PersistentPlannerService(
+            repository = JsonPlannerRepository(
+                plannerFile = File(
+                    rootDirectory,
+                    "settings/planner.json"
+                )
+            )
+        )
 
     val moduleRegistry = ModuleRegistry(
         context = ModuleContext(
@@ -72,7 +83,7 @@ class PlatformRuntime(
     private fun registerServices() {
         serviceRegistry.register(
             PlannerService::class,
-            DefaultPlannerService()
+            plannerService
         )
 
         serviceRegistry.register(

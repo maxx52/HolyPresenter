@@ -1,0 +1,15 @@
+{
+    "items": [
+        {
+            "moduleId": "songs",
+            "itemId": "2d0b72d0-f416-4b84-a6fc-5c018d553895",
+            "title": "У креста"
+        },
+        {
+            "moduleId": "songs",
+            "itemId": "02eb4db7-b34f-4bc6-bf99-6e591f8b15ec",
+            "title": "Тест 1"
+        }
+    ],
+    "activeItemIndex": null
+}
