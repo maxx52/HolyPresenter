@@ -9,6 +9,8 @@ kotlinxSerialization = "1.9.0"
 junitVersion = "4.12"
 vlcj = "4.11.0"
 tracingDesktop = "2.0.0-beta01"
+uiDesktop = "1.7.0"
+foundationDesktop = "1.7.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -28,6 +30,8 @@ junit-junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
 kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
 androidx-tracing-desktop = { group = "androidx.tracing", name = "tracing-desktop", version.ref = "tracingDesktop" }
+androidx-ui-desktop = { group = "androidx.compose.ui", name = "ui-desktop", version.ref = "uiDesktop" }
+androidx-foundation-desktop = { group = "androidx.compose.foundation", name = "foundation-desktop", version.ref = "foundationDesktop" }
 
 
 [plugins]

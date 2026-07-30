@@ -1,9 +1,11 @@
 package holypresenter.org.app.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import holypresenter.org.platform.api.docking.DockPanelState
@@ -23,6 +25,10 @@ fun MainWindow(
         mutableStateOf(true)
     }
 
+    var rightPanelOverlayOpen by remember {
+        mutableStateOf(false)
+    }
+
     val dockManager = remember {
         DockManager()
     }
@@ -39,43 +45,152 @@ fun MainWindow(
         !it.visible
     }
 
-    Row(
+    BoxWithConstraints(
         modifier = Modifier.fillMaxSize()
     ) {
-        ModuleListPanel(
-            modules = modules,
-            selectedModule = selectedModule,
-            expanded = modulesSidebarExpanded,
-            onToggleExpanded = {
-                modulesSidebarExpanded = !modulesSidebarExpanded
-            },
-            hiddenPanels = hiddenPanels,
-            onModuleClick = {
-                selectedModule = it
-            },
-            onShowPanel = dockManager::show
-        )
+        val compactModulesSidebar = maxWidth < 1280.dp
+        val useRightPanelOverlay = maxWidth < 1050.dp && rightPanels.isNotEmpty()
 
-        VerticalDivider()
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(16.dp)
-        ) {
-            selectedModule?.Workspace()
+        LaunchedEffect(compactModulesSidebar) {
+            if (compactModulesSidebar) {
+                modulesSidebarExpanded = false
+            }
         }
 
-        VerticalDivider()
+        LaunchedEffect(useRightPanelOverlay) {
+            if (!useRightPanelOverlay) {
+                rightPanelOverlayOpen = false
+            }
+        }
 
-        if (rightPanels.isNotEmpty()) {
-            VerticalDivider()
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                ModuleListPanel(
+                    modules = modules,
+                    selectedModule = selectedModule,
+                    expanded = modulesSidebarExpanded,
+                    onToggleExpanded = {
+                        modulesSidebarExpanded =
+                            !modulesSidebarExpanded
+                    },
+                    hiddenPanels = hiddenPanels,
+                    onModuleClick = {
+                        selectedModule = it
+                    },
+                    onShowPanel = dockManager::show
+                )
 
-            DockSidePanel(
-                panels = rightPanels,
-                onHidePanel = dockManager::hide
-            )
+                VerticalDivider()
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(16.dp)
+                ) {
+                    selectedModule?.Workspace()
+                }
+
+                if (
+                    !useRightPanelOverlay &&
+                    rightPanels.isNotEmpty()
+                ) {
+                    VerticalDivider()
+
+                    DockSidePanel(
+                        panels = rightPanels,
+                        onHidePanel = dockManager::hide
+                    )
+                }
+            }
+
+            if (useRightPanelOverlay) {
+                FilledTonalButton(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp),
+                    onClick = {
+                        rightPanelOverlayOpen = true
+                    }
+                ) {
+                    Text(
+                        text = rightPanels
+                            .first()
+                            .panel
+                            .title
+                    )
+                }
+
+                if (rightPanelOverlayOpen) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                MaterialTheme.colorScheme
+                                    .scrim
+                                    .copy(alpha = 0.32f)
+                            )
+                            .clickable {
+                                rightPanelOverlayOpen = false
+                            }
+                    )
+
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .width(304.dp)
+                            .fillMaxHeight()
+                            .padding(8.dp),
+                        shape =
+                            MaterialTheme.shapes.large,
+                        tonalElevation = 6.dp,
+                        shadowElevation = 8.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 16.dp,
+                                        end = 8.dp,
+                                        top = 8.dp
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = rightPanels
+                                        .first()
+                                        .panel
+                                        .title,
+                                    style = MaterialTheme
+                                        .typography
+                                        .titleMedium,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                TextButton(
+                                    onClick = {
+                                        rightPanelOverlayOpen = false
+                                    }
+                                ) {
+                                    Text("Закрыть")
+                                }
+                            }
+
+                            DockSidePanel(
+                                panels = rightPanels,
+                                onHidePanel = dockManager::hide
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
