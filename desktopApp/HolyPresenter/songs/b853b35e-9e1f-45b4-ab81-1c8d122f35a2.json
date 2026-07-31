@@ -1,0 +1,45 @@
+{
+    "id": "b853b35e-9e1f-45b4-ab81-1c8d122f35a2",
+    "metadata": {
+        "title": "Новая песнь",
+        "author": "",
+        "copyright": null,
+        "ccli": null,
+        "language": null,
+        "tags": []
+    },
+    "sections": [
+        {
+            "id": "546a883a-1a90-4a3e-8195-f81ac8f74706",
+            "type": "VERSE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "bd9d810e-21b2-4835-9139-d1ac028f83b6",
+                    "lines": [
+                        "уколорпка"
+                    ]
+                }
+            ]
+        }
+    ],
+    "theme": {
+        "background": {
+            "type": "org.holypresenter_songs.domain.SongBackground.Image",
+            "path": "C:\\Users\\gospe\\OneDrive\\Документы\\для Церкви\\photo_2026-02-13_21-33-04.jpg"
+        },
+        "textStyle": {
+            "fontFamily": null,
+            "fontSize": 109,
+            "textColor": 4286635754,
+            "bold": false,
+            "italic": false,
+            "outlineEnabled": true,
+            "shadowEnabled": true
+        },
+        "overlay": {
+            "enabled": true,
+            "opacity": 0.5410748
+        }
+    }
+}

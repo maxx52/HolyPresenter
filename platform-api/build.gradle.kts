@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.holypresenter"
-version = "0.2.0"
+version = "0.4.0"
 
 dependencies {
     implementation("org.jetbrains.compose.runtime:runtime:1.11.1")
@@ -24,7 +24,7 @@ publishing {
 
             groupId = "org.holypresenter"
             artifactId = "platform-api"
-            version = "0.3.0"
+            version = "0.4.0"
         }
     }
 }

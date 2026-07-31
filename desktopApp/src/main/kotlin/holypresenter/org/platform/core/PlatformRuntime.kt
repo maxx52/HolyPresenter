@@ -5,7 +5,6 @@ import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
 import holypresenter.org.platform.api.module.ModuleContext
-import holypresenter.org.platform.api.planner.DefaultPlannerService
 import holypresenter.org.platform.api.planner.PlannerService
 import holypresenter.org.platform.api.projection.ProjectionService
 import holypresenter.org.platform.video.DefaultVideoPlaybackService
@@ -35,12 +34,17 @@ class PlatformRuntime(
 
     private val plannerService =
         PersistentPlannerService(
-            repository = JsonPlannerRepository(
-                plannerFile = File(
-                    rootDirectory,
-                    "settings/planner.json"
+            repository =
+                JsonPlannerRepository(
+                    plannerDirectory = File(
+                        rootDirectory,
+                        "settings/planner"
+                    ),
+                    legacyPlannerFile = File(
+                        rootDirectory,
+                        "settings/planner.json"
+                    )
                 )
-            )
         )
 
     val moduleRegistry = ModuleRegistry(
