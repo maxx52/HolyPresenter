@@ -9,6 +9,8 @@ interface PlannerService {
     fun newPlan()
     fun openPlan(planId: String): Boolean
     fun saveAs(name: String): Boolean
+    fun renamePlan(planId: String, newName: String): Boolean
+    fun deletePlan(planId: String): Boolean
     fun add(item: PlannerItem)
     fun remove(item: PlannerItem)
     fun move(fromIndex: Int, toIndex: Int)

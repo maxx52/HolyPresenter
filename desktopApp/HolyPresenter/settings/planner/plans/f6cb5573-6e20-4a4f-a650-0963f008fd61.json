@@ -1,0 +1,13 @@
+{
+    "id": "f6cb5573-6e20-4a4f-a650-0963f008fd61",
+    "name": "123",
+    "items": [
+        {
+            "moduleId": "songs",
+            "itemId": "2d0b72d0-f416-4b84-a6fc-5c018d553895",
+            "title": "У креста"
+        }
+    ],
+    "activeItemIndex": null,
+    "updatedAtEpochMillis": 1785498659220
+}

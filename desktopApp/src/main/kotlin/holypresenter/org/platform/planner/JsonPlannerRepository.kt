@@ -93,18 +93,24 @@ internal class JsonPlannerRepository(
     fun savePlan(
         snapshot: PlannerSnapshot
     ) {
-        val planId =
-            snapshot.id
-                ?: return
-
-        val file =
-            planFile(planId)
-                ?: return
+        val planId = snapshot.id ?: return
+        val file = planFile(planId) ?: return
 
         writeSnapshot(
             file = file,
             snapshot = snapshot
         )
+    }
+
+    fun deletePlan(
+        planId: String
+    ): Boolean {
+        val file = planFile(planId) ?: return false
+
+        if (!file.isFile) {
+            return false
+        }
+        return file.delete()
     }
 
     private fun migrateLegacyPlanner():
