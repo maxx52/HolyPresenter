@@ -1,13 +1,18 @@
 {
     "id": "f6cb5573-6e20-4a4f-a650-0963f008fd61",
-    "name": "123",
+    "name": "12345",
     "items": [
         {
             "moduleId": "songs",
             "itemId": "2d0b72d0-f416-4b84-a6fc-5c018d553895",
             "title": "У креста"
+        },
+        {
+            "moduleId": "songs",
+            "itemId": "b853b35e-9e1f-45b4-ab81-1c8d122f35a2",
+            "title": "Новая песнь"
         }
     ],
     "activeItemIndex": null,
-    "updatedAtEpochMillis": 1785498659220
+    "updatedAtEpochMillis": 1785580645578
 }

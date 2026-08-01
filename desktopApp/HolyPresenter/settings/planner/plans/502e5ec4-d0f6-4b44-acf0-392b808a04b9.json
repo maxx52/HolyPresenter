@@ -1,0 +1,18 @@
+{
+    "id": "502e5ec4-d0f6-4b44-acf0-392b808a04b9",
+    "name": "111",
+    "items": [
+        {
+            "moduleId": "songs",
+            "itemId": "02eb4db7-b34f-4bc6-bf99-6e591f8b15ec",
+            "title": "Тест 1"
+        },
+        {
+            "moduleId": "songs",
+            "itemId": "2d0b72d0-f416-4b84-a6fc-5c018d553895",
+            "title": "У креста"
+        }
+    ],
+    "activeItemIndex": null,
+    "updatedAtEpochMillis": 1785505133752
+}

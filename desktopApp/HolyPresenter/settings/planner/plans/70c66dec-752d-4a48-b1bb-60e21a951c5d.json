@@ -1,12 +1,7 @@
 {
-    "id": "5cd73455-c482-4ddc-9366-c112915b577a",
-    "name": "конф",
+    "id": "70c66dec-752d-4a48-b1bb-60e21a951c5d",
+    "name": "45346547645",
     "items": [
-        {
-            "moduleId": "songs",
-            "itemId": "b853b35e-9e1f-45b4-ab81-1c8d122f35a2",
-            "title": "Новая песнь"
-        },
         {
             "moduleId": "songs",
             "itemId": "02eb4db7-b34f-4bc6-bf99-6e591f8b15ec",
@@ -16,8 +11,13 @@
             "moduleId": "songs",
             "itemId": "2d0b72d0-f416-4b84-a6fc-5c018d553895",
             "title": "У креста"
+        },
+        {
+            "moduleId": "songs",
+            "itemId": "b853b35e-9e1f-45b4-ab81-1c8d122f35a2",
+            "title": "Новая песнь"
         }
     ],
     "activeItemIndex": null,
-    "updatedAtEpochMillis": 1785494032933
+    "updatedAtEpochMillis": 1785580678133
 }
