@@ -5,6 +5,7 @@ import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
 import holypresenter.org.platform.api.module.ModuleContext
+import holypresenter.org.platform.api.planner.PlannerItemHandlerRegistry
 import holypresenter.org.platform.api.planner.PlannerService
 import holypresenter.org.platform.api.projection.ProjectionService
 import holypresenter.org.platform.video.DefaultVideoPlaybackService
@@ -13,6 +14,7 @@ import holypresenter.org.platform.services.DefaultServiceRegistry
 import holypresenter.org.platform.layout.DefaultLayoutService
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
 import holypresenter.org.platform.path.DesktopPathService
+import holypresenter.org.platform.planner.DefaultPlannerItemHandlerRegistry
 import holypresenter.org.platform.planner.JsonPlannerRepository
 import holypresenter.org.platform.planner.PersistentPlannerService
 import holypresenter.org.platform.plugins.PluginLoader
@@ -31,6 +33,7 @@ class PlatformRuntime(
     val serviceRegistry = DefaultServiceRegistry()
     private val videoPlaybackService = DefaultVideoPlaybackService()
     private val projectionService = DefaultProjectionService(videoPlaybackService)
+    private val plannerItemHandlerRegistry = DefaultPlannerItemHandlerRegistry()
 
     private val plannerService =
         PersistentPlannerService(
@@ -85,6 +88,11 @@ class PlatformRuntime(
     )
 
     private fun registerServices() {
+        serviceRegistry.register(
+            PlannerItemHandlerRegistry::class,
+            plannerItemHandlerRegistry
+        )
+
         serviceRegistry.register(
             PlannerService::class,
             plannerService
