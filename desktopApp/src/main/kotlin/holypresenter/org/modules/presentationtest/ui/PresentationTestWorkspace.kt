@@ -10,17 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import holypresenter.org.modules.presentationtest.PresentationTestContent
 import holypresenter.org.platform.api.module.ModuleContext
-import holypresenter.org.platform.api.presentation.Presentation
-import holypresenter.org.platform.api.presentation.PresentationMetadata
-import holypresenter.org.platform.api.presentation.PresentationSlide
-import holypresenter.org.platform.api.presentation.SlotId
-import holypresenter.org.platform.api.presentation.element.TextElement
-import holypresenter.org.platform.api.presentation.theme.PresentationBackground
-import holypresenter.org.platform.api.presentation.theme.PresentationBackgroundType
-import holypresenter.org.platform.api.presentation.theme.PresentationOverlay
-import holypresenter.org.platform.api.presentation.theme.PresentationTextStyle
-import holypresenter.org.platform.api.presentation.theme.PresentationTheme
+import holypresenter.org.platform.api.planner.PlannerItem
+import holypresenter.org.platform.api.planner.PlannerReference
+import holypresenter.org.platform.api.planner.PlannerService
 import holypresenter.org.platform.api.projection.ProjectionContent
 import holypresenter.org.platform.api.projection.ProjectionService
 
@@ -34,70 +28,41 @@ fun PresentationTestWorkspace(
         )
     }
 
-    val testPresentation = remember {
-        Presentation(
-            id = "test-presentation",
-            metadata = PresentationMetadata(
-                title = "Тестовая презентация"
-            ),
-            theme = PresentationTheme(
-                background = PresentationBackground(
-                    type =
-                        PresentationBackgroundType.COLOR,
-                    color = 0xFF202124
-                ),
-                textStyle = PresentationTextStyle(
-                    fontSize = 64,
-                    textColor = 0xFFFFFFFF,
-                    bold = true,
-                    outlineEnabled = true,
-                    shadowEnabled = true
-                ),
-                overlay = PresentationOverlay(
-                    enabled = false
-                )
-            ),
-            slides = listOf(
-                PresentationSlide(
-                    id = "test-slide-1",
-                    elements = listOf(
-                        TextElement(
-                            id = "test-text-1",
-                            slot = SlotId("main"),
-                            text =
-                                "HolyPresenter\nработает!"
-                        )
-                    )
-                ),
-                PresentationSlide(
-                    id = "test-slide-2",
-                    elements = listOf(
-                        TextElement(
-                            id = "test-text-2",
-                            slot = SlotId("main"),
-                            text =
-                                "Второй слайд\nиз Presentation"
-                        )
-                    )
-                )
-            )
+    val plannerService = remember(context) {
+        context.services.get(
+            PlannerService::class
         )
     }
 
     Column(
         modifier = Modifier.padding(24.dp),
-        verticalArrangement =
-            Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Presentation Test")
+
+        Button(
+            enabled = plannerService != null,
+            onClick = {
+                plannerService?.add(
+                    PlannerItem.Generic(
+                        reference = PlannerReference(
+                            moduleId = "presentation-test",
+                            itemId = PresentationTestContent.ITEM_ID
+                        ),
+                        title = PresentationTestContent.TITLE
+                    )
+                )
+            }
+        ) {
+            Text("Добавить в план")
+        }
 
         Button(
             enabled = projectionService != null,
             onClick = {
                 projectionService?.show(
                     ProjectionContent.Slide(
-                        presentation =
-                            testPresentation,
+                        presentation = PresentationTestContent.presentation,
                         slideIndex = 0
                     )
                 )
@@ -111,8 +76,7 @@ fun PresentationTestWorkspace(
             onClick = {
                 projectionService?.show(
                     ProjectionContent.Slide(
-                        presentation =
-                            testPresentation,
+                        presentation = PresentationTestContent.presentation,
                         slideIndex = 1
                     )
                 )
@@ -140,9 +104,7 @@ fun PresentationTestWorkspace(
         }
 
         if (projectionService == null) {
-            Text(
-                "ProjectionService не зарегистрирован"
-            )
+            Text("ProjectionService не зарегистрирован")
         }
     }
 }

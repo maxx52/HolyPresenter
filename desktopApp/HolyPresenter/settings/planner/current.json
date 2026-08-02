@@ -1,7 +1,12 @@
 {
-    "id": "f6cb5573-6e20-4a4f-a650-0963f008fd61",
-    "name": "12345",
+    "id": "c6880dd1-9652-4444-8e18-fddbd53abf26",
+    "name": "new",
     "items": [
+        {
+            "moduleId": "songs",
+            "itemId": "02eb4db7-b34f-4bc6-bf99-6e591f8b15ec",
+            "title": "Тест 1"
+        },
         {
             "moduleId": "songs",
             "itemId": "2d0b72d0-f416-4b84-a6fc-5c018d553895",
@@ -11,8 +16,13 @@
             "moduleId": "songs",
             "itemId": "b853b35e-9e1f-45b4-ab81-1c8d122f35a2",
             "title": "Новая песнь"
+        },
+        {
+            "moduleId": "presentation-test",
+            "itemId": "test-presentation",
+            "title": "Тестовая презентация"
         }
     ],
-    "activeItemIndex": null,
-    "updatedAtEpochMillis": 1785580687130
+    "activeItemIndex": 2,
+    "updatedAtEpochMillis": 1785708765943
 }
