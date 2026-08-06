@@ -1,0 +1,230 @@
+{
+    "id": "3cd1d232-a1eb-4da4-b45f-8d57167c1abb",
+    "metadata": {
+        "title": "Храни меня",
+        "author": "Виталий Ефремочкин",
+        "copyright": null,
+        "ccli": null,
+        "language": null,
+        "tags": []
+    },
+    "sections": [
+        {
+            "id": "b9d01e5e-0b9c-49a3-b71e-d2f34f947391",
+            "type": "VERSE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "e98e2165-27db-4c1d-a18e-5694557f4730",
+                    "lines": [
+                        "Ты испытал сердце мое,",
+                        "Молитву мою услышал."
+                    ],
+                    "chords": [
+                        "Ebm             Bbm/Db",
+                        "    H             Abm   Bbsus4  Bb"
+                    ]
+                },
+                {
+                    "id": "76d3fe24-8c44-48f1-acaf-2fbb1a28ef13",
+                    "lines": [
+                        "Милость Свою ко мне Ты простер,",
+                        "От тайных моих очистил."
+                    ],
+                    "chords": [
+                        "Ebm                        Bbm/Db",
+                        "    H                   Abm Bbsus4  Bb"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "70d6b11f-5556-4a70-9708-279213014eaa",
+            "type": "CHORUS",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "eee34129-0814-45cf-a817-7ece971f161f",
+                    "lines": [
+                        "Храни меня, Господь,",
+                        "В руках Твоих не поколеблюсь."
+                    ],
+                    "chords": [
+                        "                Ebm      Bbm/Db",
+                        "                     H  Abm        Bbsus4  Bb"
+                    ]
+                },
+                {
+                    "id": "8624e2c4-52c9-4aa5-863b-8e643a5f51ea",
+                    "lines": [
+                        "Веди меня, Господь,",
+                        "Всем сердцем я Тебе доверюсь."
+                    ],
+                    "chords": [
+                        "                Ebm   Bbm/Db",
+                        "                            H  Abm     Bbsus4  Bb"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "a3130196-883f-4982-8b39-e7cad948c2b2",
+            "type": "TAG",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "850f2a4f-af51-4ef6-8f9e-6e1657cab1bf",
+                    "lines": [
+                        "Тебе доверюсь."
+                    ],
+                    "chords": [
+                        null
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "a7743196-3b50-45c6-95c4-1a62c5df751e",
+            "type": "VERSE",
+            "number": 2,
+            "slides": [
+                {
+                    "id": "d66b52a0-b0e3-4f7a-bc71-ee38c8b4430e",
+                    "lines": [
+                        "Кто убежит от лица Твоего?",
+                        "От взора Святого не скрыться."
+                    ],
+                    "chords": [
+                        "Ebm                      Bbm/Db",
+                        "    H                   Abm       Bbsus4  Bb"
+                    ]
+                },
+                {
+                    "id": "86fafd30-c3e0-4b54-9c28-7520cb90bd14",
+                    "lines": [
+                        "Все пред Тобой, не утаить ничего,",
+                        "Ты знаешь глубины сердец, Всевышний."
+                    ],
+                    "chords": [
+                        "Ebm                                    Bbm/Db",
+                        "    H                                     Abm        Bbsus4  Bb"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "8ad4b3ca-862c-49d3-abe7-66852e55c8e1",
+            "type": "CHORUS",
+            "number": 2,
+            "slides": [
+                {
+                    "id": "00524e8d-0b08-42f3-9364-d0c470a1851d",
+                    "lines": [
+                        "Храни меня, Господь,",
+                        "В руках Твоих не поколеблюсь."
+                    ],
+                    "chords": []
+                },
+                {
+                    "id": "660ddae7-a779-4797-97c9-b698d36b659a",
+                    "lines": [
+                        "Веди меня, Господь,",
+                        "Всем сердцем я Тебе доверюсь."
+                    ],
+                    "chords": []
+                }
+            ]
+        },
+        {
+            "id": "1896fced-b486-4335-8b30-85705fc85197",
+            "type": "CHORUS",
+            "number": 3,
+            "slides": [
+                {
+                    "id": "61602fca-e323-41d5-9cdc-6e4b7e404799",
+                    "lines": [
+                        "Храни меня, Господь,",
+                        "В руках Твоих не поколеблюсь."
+                    ],
+                    "chords": []
+                },
+                {
+                    "id": "8e7ad6bc-6cdb-4f52-8b2d-07f7eb587f99",
+                    "lines": [
+                        "Веди меня, Господь,",
+                        "Всем сердцем я Тебе доверюсь."
+                    ],
+                    "chords": []
+                }
+            ]
+        },
+        {
+            "id": "5ba08def-9064-46f3-a87d-d0e7db6d6aa8",
+            "type": "TAG",
+            "number": 2,
+            "slides": [
+                {
+                    "id": "955e636c-a06b-433c-9484-e2489ceecf61",
+                    "lines": [
+                        "Тебе доверюсь я, мой Бог."
+                    ],
+                    "chords": [
+                        null
+                    ]
+                }
+            ]
+        }
+    ],
+    "executionOrder": [
+        {
+            "id": "fbc80bf9-4dab-476c-9c26-016a3bacd512",
+            "sectionId": "4ac1dd9d-1b86-4940-9841-9ce2702bca6c"
+        },
+        {
+            "id": "84c1187d-3fbd-4737-bc64-5ef43010e8b8",
+            "sectionId": "b9d01e5e-0b9c-49a3-b71e-d2f34f947391"
+        },
+        {
+            "id": "f878e626-a0c3-47cc-9784-51e336c6743d",
+            "sectionId": "70d6b11f-5556-4a70-9708-279213014eaa"
+        },
+        {
+            "id": "fa49792d-993b-415f-9e05-7f7ce08d79a6",
+            "sectionId": "a3130196-883f-4982-8b39-e7cad948c2b2"
+        },
+        {
+            "id": "832a0a78-277b-4eed-b6d6-6c476d13f3c5",
+            "sectionId": "a7743196-3b50-45c6-95c4-1a62c5df751e"
+        },
+        {
+            "id": "37a5132d-4075-433d-bdf9-6a349bb3f1a7",
+            "sectionId": "8ad4b3ca-862c-49d3-abe7-66852e55c8e1"
+        },
+        {
+            "id": "0e73df74-0fd9-4f09-981b-c154e2b1071e",
+            "sectionId": "1896fced-b486-4335-8b30-85705fc85197"
+        },
+        {
+            "id": "12413fb9-59bb-4eea-8a10-01f49487caee",
+            "sectionId": "5ba08def-9064-46f3-a87d-d0e7db6d6aa8"
+        }
+    ],
+    "theme": {
+        "background": {
+            "type": "org.holypresenter_songs.domain.SongBackground.None"
+        },
+        "textStyle": {
+            "fontFamily": null,
+            "fontSize": 64,
+            "textColor": 4294967295,
+            "bold": false,
+            "italic": false,
+            "outlineEnabled": true,
+            "shadowEnabled": true
+        },
+        "overlay": {
+            "enabled": true,
+            "opacity": 0.45
+        }
+    }
+}

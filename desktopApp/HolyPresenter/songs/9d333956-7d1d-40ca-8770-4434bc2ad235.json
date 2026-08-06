@@ -1,0 +1,44 @@
+{
+    "id": "9d333956-7d1d-40ca-8770-4434bc2ad235",
+    "metadata": {
+        "title": "Новая песня",
+        "author": "",
+        "copyright": null,
+        "ccli": null,
+        "language": null,
+        "tags": []
+    },
+    "sections": [
+        {
+            "id": "58355d9f-7ad3-4a4c-8cf4-ccafc523fabc",
+            "type": "VERSE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "d85d8cb8-123c-44f6-b5fd-03c1f132a24a",
+                    "lines": [
+                        ""
+                    ]
+                }
+            ]
+        }
+    ],
+    "theme": {
+        "background": {
+            "type": "org.holypresenter_songs.domain.SongBackground.None"
+        },
+        "textStyle": {
+            "fontFamily": null,
+            "fontSize": 64,
+            "textColor": 4294967295,
+            "bold": false,
+            "italic": false,
+            "outlineEnabled": true,
+            "shadowEnabled": true
+        },
+        "overlay": {
+            "enabled": true,
+            "opacity": 0.45
+        }
+    }
+}

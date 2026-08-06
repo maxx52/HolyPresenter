@@ -1,0 +1,155 @@
+{
+    "id": "cfee005c-07d3-4d08-8e37-bf9462ab9aff",
+    "metadata": {
+        "title": "Свят Господь",
+        "author": "Виталий Ефремочкин",
+        "copyright": null,
+        "ccli": null,
+        "language": null,
+        "tags": []
+    },
+    "sections": [
+        {
+            "id": "21bedb8a-5c0f-4b3e-8b38-1e14f139b3cc",
+            "type": "VERSE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "c766fd85-df2e-47a6-bb68-7bc8634bb514",
+                    "lines": [
+                        "Ты содрогаешь землю",
+                        "И славою, Ты освещаешь путь"
+                    ],
+                    "chords": [
+                        "G#m",
+                        "H"
+                    ]
+                },
+                {
+                    "id": "214ca434-143a-4109-ad54-f77a8b2efcbd",
+                    "lines": [
+                        "Ты первый, Ты последний",
+                        "И Ангелы песню поют"
+                    ],
+                    "chords": [
+                        "C#m                 E",
+                        "F#"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "da0ad159-d9dd-4f9c-87c2-3cd3808b3265",
+            "type": "CHORUS",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "2cf2089a-10a0-4445-b565-ef40da0f49c3",
+                    "lines": [
+                        "Свят, Свят Господь!",
+                        "Свят, Свят Господь!"
+                    ],
+                    "chords": [
+                        "G#m                     H",
+                        "C#m        E             F#"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "8648930a-ca6f-4415-bac2-5734fba40058",
+            "type": "VERSE",
+            "number": 2,
+            "slides": [
+                {
+                    "id": "38c26e87-86fd-44bb-8824-0bc3d7144417",
+                    "lines": [
+                        "Ты больше всей вселенной",
+                        "Любовь Твоя объемлет мир"
+                    ],
+                    "chords": [
+                        "G#m",
+                        "H"
+                    ]
+                },
+                {
+                    "id": "12cddb22-2c95-4a9e-ae07-3459a4b0e7e5",
+                    "lines": [
+                        "Ты первый, Ты последний",
+                        "И Ангелы песню поют"
+                    ],
+                    "chords": [
+                        "C#m                  E",
+                        "F#"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "117d43c9-2c19-40c1-adba-04f9d8282d98",
+            "type": "BRIDGE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "483798d8-67e0-4386-a2de-e862cc201225",
+                    "lines": [
+                        "Потряси мою жизнь пусть проснется любовь",
+                        "Сердце Бог разбуди пусть стучит в унисон с Тобой!"
+                    ],
+                    "chords": [
+                        "G#m                                  H",
+                        "C#m                          E         F#"
+                    ]
+                },
+                {
+                    "id": "21a59fd4-7cee-4b67-aba9-3acda3b75229",
+                    "lines": [
+                        "Я устал быть один, я хочу вновь дышать,",
+                        "Дыханием моим будешь Ты Господь."
+                    ],
+                    "chords": [
+                        "G#m                                  H",
+                        "        C#m                  E                     F#"
+                    ]
+                }
+            ]
+        }
+    ],
+    "executionOrder": [
+        {
+            "id": "535d024f-505d-4d7f-8652-c31cb70b2850",
+            "sectionId": "21bedb8a-5c0f-4b3e-8b38-1e14f139b3cc"
+        },
+        {
+            "id": "57a340cb-c44e-4f4f-8609-a44114a0ab6e",
+            "sectionId": "da0ad159-d9dd-4f9c-87c2-3cd3808b3265"
+        },
+        {
+            "id": "1f1aacac-c3c6-4b43-a399-ecacb8f2d18b",
+            "sectionId": "8648930a-ca6f-4415-bac2-5734fba40058"
+        },
+        {
+            "id": "0fb706e9-af62-48d6-94d6-d9f107ef9289",
+            "sectionId": "117d43c9-2c19-40c1-adba-04f9d8282d98"
+        }
+    ],
+    "theme": {
+        "background": {
+            "type": "org.holypresenter_songs.domain.SongBackground.Image",
+            "path": "C:\\Users\\gospe\\OneDrive\\Документы\\favicon.jpg"
+        },
+        "textStyle": {
+            "fontFamily": null,
+            "fontSize": 64,
+            "textColor": 4294967295,
+            "bold": false,
+            "italic": false,
+            "outlineEnabled": true,
+            "shadowEnabled": true
+        },
+        "overlay": {
+            "enabled": true,
+            "opacity": 0.45
+        }
+    }
+}

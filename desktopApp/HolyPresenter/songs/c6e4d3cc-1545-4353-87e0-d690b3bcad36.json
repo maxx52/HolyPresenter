@@ -1,0 +1,150 @@
+{
+    "id": "c6e4d3cc-1545-4353-87e0-d690b3bcad36",
+    "metadata": {
+        "title": "Ты мой",
+        "author": "Виталий Ефремочкин",
+        "copyright": null,
+        "ccli": null,
+        "language": null,
+        "tags": []
+    },
+    "sections": [
+        {
+            "id": "e98b4790-7895-426c-a321-670d2440e051",
+            "type": "VERSE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "93e146f5-8a92-41e1-ac63-4db424b1a445",
+                    "lines": [
+                        "Если ты пойдёшь Меня искать",
+                        "Ты найдёшь горящий куст."
+                    ],
+                    "chords": [
+                        "Fm                            Db",
+                        "Fm                                        Db"
+                    ]
+                },
+                {
+                    "id": "f761611e-edff-4beb-8df6-a2408f499472",
+                    "lines": [
+                        "А взойдя на гору позовёшь",
+                        "С ветром Я приду."
+                    ],
+                    "chords": [
+                        "Fm                           Db",
+                        "Fm                           Db"
+                    ]
+                },
+                {
+                    "id": "f437a16c-6dae-4821-89b5-93364d4e9ce3",
+                    "lines": [
+                        "Проходя долиной скорби",
+                        "Я от тебя не отвернусь."
+                    ],
+                    "chords": [
+                        "Fm                                  Db",
+                        "              Fm                            Db"
+                    ]
+                },
+                {
+                    "id": "45ded988-240c-40e5-90ef-7c585333c1d5",
+                    "lines": [
+                        "Я обещал с тобой всегда быть",
+                        "И Собою я клянусь."
+                    ],
+                    "chords": [
+                        "Fm                                           Db",
+                        "           Fm             Db"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "2c725979-d31e-4bd9-bcbf-62fa337d9747",
+            "type": "CHORUS",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "c8a5561e-1656-4020-b6aa-7dacfb3df7dd",
+                    "lines": [
+                        "Ты мой, Я назвал тебя по имени",
+                        "Ты мой, всё что есть во Мне себе возьми"
+                    ],
+                    "chords": [
+                        "        Fm  Db",
+                        "        Fm      Db"
+                    ]
+                },
+                {
+                    "id": "4ab20f7c-b408-40b4-937f-a56c8d175aee",
+                    "lines": [
+                        "Ты мой, твоё имя, как печать во Мне",
+                        "Ты мой на высоте и глубине ты Мой"
+                    ],
+                    "chords": [
+                        "         Ab     Bbm",
+                        "        Fm   Db"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "79176382-8265-4d21-bd36-d886b178d78e",
+            "type": "VERSE",
+            "number": 2,
+            "slides": [
+                {
+                    "id": "3c8b66d0-46de-45bc-ba32-e46169d43578",
+                    "lines": [
+                        "Если Я пойду с тобою,",
+                        "Я море в сушу превращу."
+                    ],
+                    "chords": []
+                },
+                {
+                    "id": "c951a955-4308-49a2-a6cc-074a9e95180e",
+                    "lines": [
+                        "И когда готов ты к бою,",
+                        "Солнце над тобой держу."
+                    ],
+                    "chords": []
+                },
+                {
+                    "id": "3b9ce449-3236-47b8-8232-8b865c94b528",
+                    "lines": [
+                        "Я не выбрал Себе храмы,",
+                        "Златоглавые дома."
+                    ],
+                    "chords": []
+                },
+                {
+                    "id": "00d36a1e-7b05-4857-bcae-94b639fdc07a",
+                    "lines": [
+                        "Я там, где горят сердцами,",
+                        "Где ко Мне звучит хвала."
+                    ],
+                    "chords": []
+                }
+            ]
+        }
+    ],
+    "theme": {
+        "background": {
+            "type": "org.holypresenter_songs.domain.SongBackground.None"
+        },
+        "textStyle": {
+            "fontFamily": null,
+            "fontSize": 64,
+            "textColor": 4294967295,
+            "bold": false,
+            "italic": false,
+            "outlineEnabled": true,
+            "shadowEnabled": true
+        },
+        "overlay": {
+            "enabled": true,
+            "opacity": 0.45
+        }
+    }
+}

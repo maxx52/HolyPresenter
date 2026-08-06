@@ -1,0 +1,109 @@
+{
+    "id": "26f9aa13-6f2e-4895-a157-c52f1bae90af",
+    "metadata": {
+        "title": "Танцуй",
+        "author": "",
+        "copyright": null,
+        "ccli": null,
+        "language": null,
+        "tags": []
+    },
+    "sections": [
+        {
+            "id": "1165a684-b2cc-43fb-aa29-4328f3ea2949",
+            "type": "VERSE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "f42782ba-a542-429a-a2ea-c5087dee2acd",
+                    "lines": [
+                        "Я в сердце Твоем, мой Бог навсегда",
+                        "Твоя любовь вечна"
+                    ]
+                },
+                {
+                    "id": "f7410ffb-51df-48a8-bb35-6b4c566979be",
+                    "lines": [
+                        "Тебя буду славить",
+                        "Знаю ничто не удержит меня - никогда!"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ee6e07c5-7478-4277-bef2-36086639a968",
+            "type": "VERSE",
+            "number": 2,
+            "slides": [
+                {
+                    "id": "cdaf01aa-34c7-41a0-b689-5a3fcf366b2d",
+                    "lines": [
+                        "Близко ко мне Ты мой Господь,",
+                        "В славе и хвале живешь,"
+                    ]
+                },
+                {
+                    "id": "cea20fc5-cc2a-4900-a1ee-bd789f92cb6f",
+                    "lines": [
+                        "Тебя буду славить",
+                        "Знаю ничто не удержит меня – никогда!"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "2107a339-1217-4beb-9b12-91732095d906",
+            "type": "CHORUS",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "fe1ac1d6-ef8e-4ca4-ad3a-d712fb902de0",
+                    "lines": [
+                        "Танцуй, танцуй,",
+                        "Дух Святой во мне!"
+                    ]
+                },
+                {
+                    "id": "4088430a-2495-4742-a1ad-8580c0a4ac34",
+                    "lines": [
+                        "Танцуй, танцуй,",
+                        "Дух Святой в тебе!"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "da904951-92a3-4b3c-bcfd-10431cd30eca",
+            "type": "BRIDGE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "f5e2ede3-59d3-4abe-af40-550084a67a9f",
+                    "lines": [
+                        "Ты со мною навсегда, мой Господь",
+                        "В Тебe вся жизнь моя,"
+                    ]
+                }
+            ]
+        }
+    ],
+    "theme": {
+        "background": {
+            "type": "org.holypresenter_songs.domain.SongBackground.Image",
+            "path": "D:\\М. Кашеваров\\IMG_7813.PNG"
+        },
+        "textStyle": {
+            "fontFamily": null,
+            "fontSize": 64,
+            "textColor": 4294967295,
+            "bold": false,
+            "italic": false,
+            "outlineEnabled": true,
+            "shadowEnabled": true
+        },
+        "overlay": {
+            "enabled": true,
+            "opacity": 0.45
+        }
+    }
+}

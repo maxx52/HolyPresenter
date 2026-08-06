@@ -1,0 +1,319 @@
+{
+    "id": "a04eceb7-1262-485d-bbe7-9dc65e9f0c07",
+    "metadata": {
+        "title": "Дух святой, приди",
+        "author": "Виталий Ефремочкин",
+        "copyright": null,
+        "ccli": null,
+        "language": null,
+        "tags": []
+    },
+    "sections": [
+        {
+            "id": "76810116-6060-4ca1-b288-70020a716919",
+            "type": "VERSE",
+            "number": 1,
+            "slides": []
+        },
+        {
+            "id": "6fbb9c67-927e-4b96-98e3-23cc80faaa17",
+            "type": "VERSE",
+            "number": 2,
+            "slides": [
+                {
+                    "id": "271f68ce-7d7b-40e9-8b19-6a6ad17bc385",
+                    "lines": [
+                        "Так жажду прикоснуться лишь к Тебе.",
+                        "Прикоснуться лишь к Тебе. Прикоснуться лишь к Тебе."
+                    ],
+                    "chords": [
+                        "        Eb                                            Fm",
+                        "                                     Cm                                          Bb/D"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "e345b8b4-d4ba-48cd-965f-846928bfb58d",
+            "type": "VERSE",
+            "number": 3,
+            "slides": [
+                {
+                    "id": "51b2e18e-7e8d-4290-8544-5753b870461e",
+                    "lines": [
+                        "Дух Святой приди, в жизнь мою приди",
+                        "Я так жажду прикоснуться лишь к Тебе"
+                    ],
+                    "chords": [
+                        "Cm                           Bb/D",
+                        "          Eb                                              Fm"
+                    ]
+                },
+                {
+                    "id": "0d38cc2c-cdc1-4e3e-8617-536d420febc9",
+                    "lines": [
+                        "Сердце мне омой, омой живой водой,",
+                        "Я так жажду прикоснуться лишь к Тебе."
+                    ],
+                    "chords": [
+                        "Cm                          Bb/D",
+                        "          Eb                                            Fm"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "8e49d5d6-9c38-4b35-878e-a8761962758c",
+            "type": "VERSE",
+            "number": 4,
+            "slides": [
+                {
+                    "id": "97a3ede5-cd56-4abc-9395-555df4846518",
+                    "lines": [
+                        "Дух Святой приди, в жизнь мою приди",
+                        "Я так жажду прикоснуться лишь к Тебе."
+                    ],
+                    "chords": [
+                        " Ab                              Fm",
+                        "         Eb                                              Bb"
+                    ]
+                },
+                {
+                    "id": "d49b2224-a6cb-4ac8-802c-fc2053f54086",
+                    "lines": [
+                        "Сердце мне омой, омой живой водой,",
+                        "Я так жажду прикоснуться лишь к Тебе."
+                    ],
+                    "chords": [
+                        "  Ab                          Fm",
+                        "          Eb                                              G"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "dc1adce7-edb5-4490-ae94-171ce72cb75d",
+            "type": "VERSE",
+            "number": 5,
+            "slides": [
+                {
+                    "id": "45212fb4-f104-492a-872e-1b63b9a1a147",
+                    "lines": [
+                        "Так жажду прикоснуться лишь к Тебе.",
+                        "Прикоснуться лишь к Тебе. Прикоснуться лишь к Тебе."
+                    ],
+                    "chords": [
+                        "        Ab                                            Fm",
+                        "                                          Cm                                          Bb"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "dbad684a-5348-4b04-ae0e-550db825c2f9",
+            "type": "VERSE",
+            "number": 6,
+            "slides": [
+                {
+                    "id": "62338691-a2fd-4509-b21f-d5afc3fc213b",
+                    "lines": [
+                        "Дух Святой приди, в жизнь мою приди",
+                        "Я так жажду прикоснуться лишь к Тебе."
+                    ],
+                    "chords": [
+                        "  Cm                          Bb/D",
+                        "          Eb                                            Fm"
+                    ]
+                },
+                {
+                    "id": "c902d5a3-8b29-422b-89f9-72fbadacbfe0",
+                    "lines": [
+                        "Сердце мне омой, омой живой водой,",
+                        "Я так жажду прикоснуться лишь к Тебе."
+                    ],
+                    "chords": [
+                        "  Ab                          Fm",
+                        "          Eb                                             G"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "a3532189-6033-43aa-8f2d-4e54b8a070f9",
+            "type": "VERSE",
+            "number": 7,
+            "slides": [
+                {
+                    "id": "978ae557-c62e-44c6-a4cd-d2e341bf72e9",
+                    "lines": [
+                        "Прикоснуться лишь к Тебе так жажду",
+                        "Оооооооооо"
+                    ],
+                    "chords": [
+                        "Ab  Fm                             Eb           Bb",
+                        "Ab  Fm  Eb  Gm"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "17527148-d89d-4c5e-973b-3ccaf9baa40e",
+            "type": "BRIDGE",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "1a070f1c-0e75-420f-af6f-e866c212ca86",
+                    "lines": [
+                        "Святостью наполни, изливай с небес Свой дождь!",
+                        "Силой и любовью прикоснись!"
+                    ],
+                    "chords": [
+                        "  Cm                          Eb4            Bb",
+                        "Cm                              Eb4            Bb"
+                    ]
+                },
+                {
+                    "id": "b47bbe60-e65a-481a-b803-b0be74e97544",
+                    "lines": [
+                        "Хочу я быть с Тобою, жить по истине Твоей!",
+                        "Дух Святой наполни!"
+                    ],
+                    "chords": [
+                        "Cm                         Eb               Bb",
+                        "Ab                                 Fm"
+                    ]
+                },
+                {
+                    "id": "a6f39c5a-3e43-4842-adfb-68b70c1aa5c9",
+                    "lines": [
+                        "Святостью наполни, изливай с небес Свой дождь!",
+                        "Силой и любовью прикоснись!"
+                    ],
+                    "chords": [
+                        "  Cm                          Eb            Bb",
+                        "Ab                         Cm           Bb"
+                    ]
+                },
+                {
+                    "id": "9f47816b-3288-4411-ab8d-617db19f9ecb",
+                    "lines": [
+                        "Хочу я быть с Тобою, жить по истине Твоей!",
+                        "Дух Святой наполни!"
+                    ],
+                    "chords": [
+                        "Ab                            Cm              Bb",
+                        "Ab                             Fm"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "c81f805b-248c-4b4b-8015-9b97cbd6bdf8",
+            "type": "ENDING",
+            "number": 1,
+            "slides": [
+                {
+                    "id": "e96d1a1f-c1b1-4097-bed6-9da42492cbab",
+                    "lines": [
+                        "Аллилуйя, Аллилуйя, Аллилуйя, Поклоняюсь Тебе",
+                        "Аллилуйя, Аллилуйя, Аллилуйя, Поклоняюсь Тебе"
+                    ],
+                    "chords": [
+                        "         Cm             Csus2            Cm               Csus2",
+                        "         Cm             Csus2            Cm               Csus2"
+                    ]
+                },
+                {
+                    "id": "19203523-2724-4fab-b24c-8c7677ec6d7b",
+                    "lines": [
+                        "Аллилуйя, Аллилуйя, Аллилуйя, Поклоняюсь Тебе",
+                        "Аллилуйя, Аллилуйя, Аллилуйя, Поклоняюсь Тебе"
+                    ],
+                    "chords": [
+                        "         Ab              Fm         Cm                Bb",
+                        "         Ab              Fm            Eb               Gm"
+                    ]
+                },
+                {
+                    "id": "1171bab6-691d-48fa-b7d3-9808420160cb",
+                    "lines": [
+                        "Аллилуйя, Аллилуйя, Аллилуйя, Поклоняюсь Тебе",
+                        "Аллилуйя, Аллилуйя, Аллилуйя, Поклоняюсь Тебе"
+                    ],
+                    "chords": [
+                        "             Cm            Bb/D        Eb                Fm",
+                        "           Ab              Fm            Eb               Gm"
+                    ]
+                },
+                {
+                    "id": "b5b49d9d-aefc-4aef-a938-d31bdac44983",
+                    "lines": [
+                        "Аллилуйя, Аллилуйя, Аллилуйя, Поклоняюсь Тебе",
+                        "Аллилуйя, Аллилуйя, Аллилуйя, Поклоняюсь Тебе"
+                    ],
+                    "chords": [
+                        "             Cm            Bb/D        Eb                Fm",
+                        "           Ab              Fm            Eb               G                         Cm"
+                    ]
+                }
+            ]
+        }
+    ],
+    "executionOrder": [
+        {
+            "id": "f293e037-968b-4051-b4a5-ab02d0eedf22",
+            "sectionId": "76810116-6060-4ca1-b288-70020a716919"
+        },
+        {
+            "id": "1d5c0060-8df2-4884-9bf8-fb635a1b9228",
+            "sectionId": "6fbb9c67-927e-4b96-98e3-23cc80faaa17"
+        },
+        {
+            "id": "b873f10c-5010-440a-94cd-72e071aa132b",
+            "sectionId": "e345b8b4-d4ba-48cd-965f-846928bfb58d"
+        },
+        {
+            "id": "12bab97e-2f67-42cd-abf5-d98b3bc4d744",
+            "sectionId": "8e49d5d6-9c38-4b35-878e-a8761962758c"
+        },
+        {
+            "id": "f1041e21-68e1-425b-bbd0-4bec49feda21",
+            "sectionId": "dc1adce7-edb5-4490-ae94-171ce72cb75d"
+        },
+        {
+            "id": "1beccb5b-b1a3-424b-8508-2ea2cfb98da8",
+            "sectionId": "dbad684a-5348-4b04-ae0e-550db825c2f9"
+        },
+        {
+            "id": "e5357319-e809-4869-bd69-ee2bfcc7aabc",
+            "sectionId": "a3532189-6033-43aa-8f2d-4e54b8a070f9"
+        },
+        {
+            "id": "e48228c5-3cae-4025-a27d-80a6888254e2",
+            "sectionId": "17527148-d89d-4c5e-973b-3ccaf9baa40e"
+        },
+        {
+            "id": "4746bd49-23bc-4028-a377-5db4fa14129d",
+            "sectionId": "c81f805b-248c-4b4b-8015-9b97cbd6bdf8"
+        }
+    ],
+    "theme": {
+        "background": {
+            "type": "org.holypresenter_songs.domain.SongBackground.Image",
+            "path": "C:\\Users\\gospe\\OneDrive\\Документы\\favicon.jpg"
+        },
+        "textStyle": {
+            "fontFamily": null,
+            "fontSize": 64,
+            "textColor": 4294967295,
+            "bold": false,
+            "italic": false,
+            "outlineEnabled": true,
+            "shadowEnabled": true
+        },
+        "overlay": {
+            "enabled": true,
+            "opacity": 0.45
+        }
+    }
+}
