@@ -248,9 +248,8 @@ private fun ModuleListPanel(
                     modifier = Modifier.padding(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Пока вместо иконки первая буква
                     Text(
-                        moduleIcon(module.metadata.id),
+                        text = module.metadata.icon,
                         style = MaterialTheme.typography.titleMedium
                     )
 
@@ -328,12 +327,3 @@ private fun DockSidePanel(
         }
     }
 }
-
-private fun moduleIcon(id: String): String =
-    when (id) {
-        "songs" -> "🎵"
-        "projector" -> "📺"
-        "welcome" -> "👋"
-        "presentation-test" -> "🧪"
-        else -> "📦"
-    }

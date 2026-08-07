@@ -20,7 +20,8 @@ class PresentationTestModule : HolyModule {
             version = "1.0.0",
             apiVersion = "0.6.0",
             author = "HolyPresenter",
-            description = "Developer module for testing Presentation API"
+            description = "Developer module for testing Presentation API",
+            icon = "🧪"
         )
 
     override fun onLoad(

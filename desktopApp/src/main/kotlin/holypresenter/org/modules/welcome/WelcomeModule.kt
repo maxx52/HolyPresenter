@@ -18,6 +18,7 @@ class WelcomeModule : HolyModule {
         author = "HolyPresenter",
         description = "Тестовый модуль приветствия",
         apiVersion = "1.0.0",
+        icon = "👋"
     )
 
     @Composable
