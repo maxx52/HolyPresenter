@@ -3,17 +3,14 @@ package holypresenter.org.platform.path
 import java.io.File
 
 class DesktopPathService : PathService {
-    /*
-     * Рабочая папка используется для режима разработки.
-     */
     private val workingDirectory: File =
         File(
             System.getProperty("user.dir")
         ).absoluteFile
 
     /*
-     * В упакованном приложении Compose передаёт
-     * путь к дополнительным ресурсам через это свойство.
+     * Дополнительные ресурсы установленной программы.
+     * Здесь находятся встроенные модули.
      */
     private val packagedResourcesDirectory: File? =
         System.getProperty(
@@ -26,16 +23,15 @@ class DesktopPathService : PathService {
                 File(path).absoluteFile
             }
 
-    override val home: File = workingDirectory
+    /*
+     * Все изменяемые пользовательские данные
+     * должны находиться вне Program Files.
+     */
+    override val home: File = resolveApplicationDataDirectory()
 
     /*
-     * В установленной программе берём модули
+     * Модули установленной программы читаем
      * из ресурсов дистрибутива.
-     *
-     * При запуске из IDE ищем:
-     *
-     * 1. <user.dir>/modules
-     * 2. <user.dir>/desktopApp/modules
      */
     override val modules: File =
         packagedResourcesDirectory
@@ -47,26 +43,100 @@ class DesktopPathService : PathService {
     override val logs: File = File(home, "logs")
 
     override fun ensureDirectories() {
+        ensureWritableDirectory(
+            directory = home,
+            description = "каталог данных HolyPresenter"
+        )
+
+        ensureWritableDirectory(
+            directory = settings,
+            description = "каталог настроек"
+        )
+
+        ensureWritableDirectory(
+            directory = layouts,
+            description = "каталог раскладок"
+        )
+
+        ensureWritableDirectory(
+            directory = logs,
+            description = "каталог журналов"
+        )
+
         /*
-         * Папка ресурсов установленной программы
-         * может быть доступна только для чтения.
+         * В установленной версии modules находится
+         * внутри ресурсов и не должна изменяться.
          */
         if (packagedResourcesDirectory == null) {
-            modules.mkdirs()
+            if (!modules.exists()) {
+                modules.mkdirs()
+            }
         }
-        settings.mkdirs()
-        layouts.mkdirs()
-        logs.mkdirs()
+    }
+
+    private fun resolveApplicationDataDirectory(): File {
+        val localAppData =
+            System.getenv("LOCALAPPDATA")
+                ?.takeIf { path ->
+                    path.isNotBlank()
+                }
+                ?.let(::File)
+
+        return if (localAppData != null) {
+            File(
+                localAppData,
+                "HolyPresenter"
+            )
+        } else {
+            File(
+                System.getProperty("user.home"),
+                ".holypresenter"
+            )
+        }.absoluteFile
     }
 
     private fun resolveDevelopmentModulesDirectory(): File {
-        val directModules = File(workingDirectory, "modules")
-        val modulesFromProjectRoot = File(workingDirectory, "desktopApp/modules")
+        val directModules =
+            File(
+                workingDirectory,
+                "modules"
+            )
+
+        val projectModules =
+            File(
+                workingDirectory,
+                "desktopApp/modules"
+            )
 
         return when {
             directModules.isDirectory -> directModules
-            modulesFromProjectRoot.isDirectory -> modulesFromProjectRoot
+            projectModules.isDirectory -> projectModules
             else -> directModules
+        }
+    }
+
+    private fun ensureWritableDirectory(
+        directory: File,
+        description: String
+    ) {
+        if (
+            !directory.exists() &&
+            !directory.mkdirs()
+        ) {
+            error(
+                "Не удалось создать $description: " +
+                        directory.absolutePath
+            )
+        }
+
+        require(directory.isDirectory) {
+            "$description не является каталогом: " +
+                    directory.absolutePath
+        }
+
+        require(directory.canWrite()) {
+            "Нет доступа на запись в $description: " +
+                    directory.absolutePath
         }
     }
 }

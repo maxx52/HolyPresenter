@@ -1,11 +1,74 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.TaskAction
 
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     kotlin("plugin.serialization") version "2.4.0"
+}
+
+abstract class VerifyBundledModules : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val moduleJars: ConfigurableFileCollection
+
+    @TaskAction
+    fun verify() {
+        val jars = moduleJars.files
+
+        val songsExists =
+            jars.any { file ->
+                    file.isFile && file.name.equals("songs.jar", ignoreCase = true
+                )
+            }
+
+        if (!songsExists) {
+            throw GradleException(
+                """
+                Не найден модуль Songs.
+
+                Ожидается:
+                desktopApp/modules/songs.jar
+
+                Сначала соберите HolyPresenter-Songs,
+                чтобы installModule скопировал songs.jar.
+                """.trimIndent()
+            )
+        }
+
+        val platformUiExists =
+            jars.any { file ->
+                file.isFile &&
+                        file.extension.equals(
+                            "jar",
+                            ignoreCase = true
+                        ) &&
+                        file.name.startsWith(
+                            "platform-ui-",
+                            ignoreCase = true
+                        )
+            }
+
+        if (!platformUiExists) {
+            throw GradleException(
+                """
+                В desktopApp/modules отсутствует
+                platform-ui-*.jar.
+
+                Модуль Songs без HolyPresenter Platform UI
+                загрузиться не сможет.
+                """.trimIndent()
+            )
+        }
+    }
 }
 
 dependencies {
@@ -37,65 +100,38 @@ val packageResourcesDirectory =
         "generated/packageResources"
     )
 
+val bundledModuleJars =
+    fileTree(
+        modulesSourceDirectory.asFile
+    ) {
+        include("*.jar")
+    }
+
+val verifyBundledModules by tasks.registering(
+    VerifyBundledModules::class
+) {
+    group = "verification"
+    description = "Проверяет встроенные модули HolyPresenter"
+
+    moduleJars.from(
+        bundledModuleJars
+    )
+}
+
 val prepareBundledModules by tasks.registering(
     Sync::class
 ) {
     group = "distribution"
     description = "Подготавливает встроенные модули HolyPresenter"
 
-    from(modulesSourceDirectory) {
-        include("*.jar")
-    }
+    dependsOn(verifyBundledModules)
+    from(bundledModuleJars)
 
     into(
         packageResourcesDirectory.map { directory ->
-            directory.dir(
-                "common/modules"
-            )
+            directory.dir("common/modules")
         }
     )
-
-    doFirst {
-        val modulesDirectory = modulesSourceDirectory.asFile
-        val songsJar = File(modulesDirectory, "songs.jar")
-
-        require(songsJar.isFile) {
-            """
-            Не найден модуль Songs:
-
-            ${songsJar.absolutePath}
-
-            Сначала соберите HolyPresenter-Songs,
-            чтобы задача installModule скопировала songs.jar.
-            """.trimIndent()
-        }
-
-        val platformUiExists =
-            modulesDirectory
-                .listFiles()
-                ?.any { file ->
-                    file.isFile &&
-                        file.extension.equals(
-                            "jar",
-                            ignoreCase = true
-                        ) &&
-                        file.name.startsWith(
-                            "platform-ui-"
-                        )
-                }
-                ?: false
-
-        require(platformUiExists) {
-            """
-            В папке модулей отсутствует platform-ui-*.jar:
-
-            ${modulesDirectory.absolutePath}
-
-            Модуль Songs без HolyPresenter Platform UI
-            загрузиться не сможет.
-            """.trimIndent()
-        }
-    }
 }
 
 compose.desktop {
@@ -139,7 +175,7 @@ compose.desktop {
             )
 
             packageName = "HolyPresenter"
-            packageVersion = "1.0.1"
+            packageVersion = "1.0.3"
 
             /*
              * Временно включаем все модули JDK,

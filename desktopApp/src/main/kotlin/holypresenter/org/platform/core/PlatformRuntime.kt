@@ -22,17 +22,29 @@ import holypresenter.org.platform.projection.DefaultProjectionService
 import holypresenter.org.platform.settings.DefaultSettingsService
 import holypresenter.org.platform.settings.repository.JsonSettingsRepository
 import holypresenter.org.platform.window.DefaultWindowService
+import holypresenter.org.platform.path.PathService
 import java.io.File
 
 class PlatformRuntime(
-    rootDirectory: File = File("HolyPresenter")
+    pathService: PathService = DesktopPathService()
 ) {
+    private val pathService =
+        pathService.also { service ->
+            service.ensureDirectories()
+        }
+
     val eventBus: EventBus = EventBus()
     val commandBus = CommandBus()
-    private val pathService = DesktopPathService()
     val serviceRegistry = DefaultServiceRegistry()
-    private val videoPlaybackService = DefaultVideoPlaybackService()
-    private val projectionService = DefaultProjectionService(videoPlaybackService)
+
+    private val videoPlaybackService =
+        DefaultVideoPlaybackService()
+
+    private val projectionService =
+        DefaultProjectionService(
+            videoPlaybackService
+        )
+
     private val plannerItemHandlerRegistry = DefaultPlannerItemHandlerRegistry()
 
     private val plannerService =
@@ -40,12 +52,12 @@ class PlatformRuntime(
             repository =
                 JsonPlannerRepository(
                     plannerDirectory = File(
-                        rootDirectory,
-                        "settings/planner"
+                        pathService.settings,
+                        "planner"
                     ),
                     legacyPlannerFile = File(
-                        rootDirectory,
-                        "settings/planner.json"
+                        pathService.settings,
+                        "planner.json"
                     )
                 )
         )
@@ -60,13 +72,13 @@ class PlatformRuntime(
 
     val layoutService = DefaultLayoutService(
         repository = JsonLayoutRepository(
-            layoutDirectory = File(rootDirectory, "layouts")
+            layoutDirectory = pathService.layouts
         )
     )
 
     val settingsService = DefaultSettingsService(
         repository = JsonSettingsRepository(
-            settingsFile = File(rootDirectory, "settings/platform.json")
+            settingsFile = File(pathService.settings, "platform.json")
         )
     )
 
@@ -111,7 +123,6 @@ class PlatformRuntime(
 
     init {
         registerServices()
-        pathService.ensureDirectories()
         registerBuiltinModules()
         registerExternalModules()
     }
