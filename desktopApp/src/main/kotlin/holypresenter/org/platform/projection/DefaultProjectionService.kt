@@ -115,6 +115,7 @@ class DefaultProjectionService(
         mutableState.value =
             mutableState.value.copy(
                 content = content,
+                isOpen = true,
                 visible = true,
                 textVisible = textVisible
             )
