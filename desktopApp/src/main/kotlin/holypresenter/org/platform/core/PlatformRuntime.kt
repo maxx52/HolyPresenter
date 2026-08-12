@@ -200,7 +200,7 @@ class PlatformRuntime(
     }
 
     private fun registerExternalModules() {
-        pluginLoader.loadModules().forEach { module ->
+        pluginLoader.loadModules(disabledModuleIds).forEach { module ->
             runCatching {
                 registerIfEnabled(module)
             }.onFailure { error ->
