@@ -49,8 +49,14 @@ fun QuickOutputWorkspace(context: ModuleContext) {
             OutlinedButton(onClick = { choose("Музыкальный трек", "mp3", "wav", "m4a", "aac", "flac", "ogg")?.let { audioPath = it } }) { Text("Выбрать трек") }
             audioPath?.let { Text(File(it).name, modifier = Modifier.padding(top = 12.dp)) }
         }
+        val isCurrentTrack = audioPath != null && audioPath == audio?.currentPath
+        val canResume = isCurrentTrack && audio?.isPlaying == false
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(enabled = audioPath != null && audio != null, onClick = { audioPath?.let { audio?.play(it) } }) { Text("▶ Play") }
+            Button(enabled = audioPath != null && audio != null, onClick = {
+                audioPath?.let { path ->
+                    if (canResume) audio?.resume() else audio?.play(path)
+                }
+            }) { Text(if (canResume) "▶ Продолжить" else "▶ Play") }
             OutlinedButton(enabled = audio?.isPlaying == true, onClick = { audio?.pause() }) { Text("❚❚ Pause") }
             OutlinedButton(enabled = audio?.currentPath != null, onClick = { audio?.stop() }) { Text("■ Stop") }
         }

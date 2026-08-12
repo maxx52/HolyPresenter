@@ -24,7 +24,17 @@ class VlcAudioPlaybackService : AudioPlaybackService {
         val file = File(path)
         if (!file.isFile) { errorMessage = "Файл трека не найден"; return }
         val mediaPlayer = player ?: return
-        runCatching { mediaPlayer.media().play(file.absolutePath, ":no-video", ":no-video-title-show") }
+        errorMessage = null
+        runCatching {
+            // Явно включаем звук: настройки VLC могли остаться выключенными после видео.
+            mediaPlayer.audio().isMute = false
+            mediaPlayer.audio().volume = 100
+            mediaPlayer.media().play(
+                file.toURI().toString(),
+                ":no-video",
+                ":no-video-title-show"
+            )
+        }
             .onFailure { errorMessage = "Не удалось открыть трек: ${it.message}" }
         currentPath = file.absolutePath
         isPlaying = errorMessage == null
