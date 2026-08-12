@@ -7,6 +7,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskAction
+import java.util.jar.JarFile
 
 plugins {
     alias(libs.plugins.kotlinJvm)
@@ -26,7 +27,7 @@ abstract class VerifyBundledModules : DefaultTask() {
 
         val unreadableJars = jars.filter { file ->
             !file.isFile || runCatching {
-                java.util.jar.JarFile(file).use { archive ->
+                JarFile(file).use { archive ->
                     val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
                     val entries = archive.entries()
                     while (entries.hasMoreElements()) {
