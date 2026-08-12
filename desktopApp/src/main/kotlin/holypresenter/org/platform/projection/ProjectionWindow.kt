@@ -295,7 +295,7 @@ private class ProjectionPanel(private var textVisible: Boolean = true) : JPanel(
             return
         }
 
-        val lines = text.lines()
+        val sourceLines = text.lines()
         val fontFamily =
             style.fontFamily
                 ?.takeIf(String::isNotBlank)
@@ -306,7 +306,7 @@ private class ProjectionPanel(private var textVisible: Boolean = true) : JPanel(
             if (style.autoSize) {
                 findFittingFontSize(
                     graphics = graphics,
-                    lines = lines,
+                    lines = sourceLines,
                     fontFamily = fontFamily,
                     fontStyle = fontStyle,
                     requestedSize = requestedSize,
@@ -319,6 +319,11 @@ private class ProjectionPanel(private var textVisible: Boolean = true) : JPanel(
 
         graphics.font = Font(fontFamily, fontStyle, actualSize)
         val metrics = graphics.fontMetrics
+        val lines = wrapLines(
+            sourceLines = sourceLines,
+            metrics = metrics,
+            maximumWidth = bounds.width
+        )
         val lineHeight = metrics.height
         val totalHeight = lines.size * lineHeight
         var y = bounds.y + (bounds.height - totalHeight) / 2 + metrics.ascent
@@ -372,8 +377,9 @@ private class ProjectionPanel(private var textVisible: Boolean = true) : JPanel(
         for (size in requestedSize downTo minimumSize) {
             graphics.font = Font(fontFamily, fontStyle, size)
             val metrics = graphics.fontMetrics
-            val widestLine = lines.maxOfOrNull(metrics::stringWidth) ?: 0
-            val totalHeight = lines.size * metrics.height
+            val wrappedLines = wrapLines(lines, metrics, bounds.width)
+            val widestLine = wrappedLines.maxOfOrNull(metrics::stringWidth) ?: 0
+            val totalHeight = wrappedLines.size * metrics.height
 
             if (widestLine <= bounds.width && totalHeight <= bounds.height) {
                 return size
@@ -382,6 +388,34 @@ private class ProjectionPanel(private var textVisible: Boolean = true) : JPanel(
 
         return minimumSize
     }
+
+    private fun wrapLines(
+        sourceLines: List<String>,
+        metrics: java.awt.FontMetrics,
+        maximumWidth: Int
+    ): List<String> =
+        sourceLines.flatMap { sourceLine ->
+            if (sourceLine.isBlank() || metrics.stringWidth(sourceLine) <= maximumWidth) {
+                listOf(sourceLine)
+            } else {
+                val result = mutableListOf<String>()
+                var line = ""
+
+                sourceLine.split(Regex("\\s+")).forEach { word ->
+                    val candidate = if (line.isEmpty()) word else "$line $word"
+
+                    if (metrics.stringWidth(candidate) <= maximumWidth) {
+                        line = candidate
+                    } else {
+                        if (line.isNotEmpty()) result += line
+                        line = word
+                    }
+                }
+
+                if (line.isNotEmpty()) result += line
+                result
+            }
+        }
 
     private fun drawTextShadow(
         graphics: Graphics2D,
