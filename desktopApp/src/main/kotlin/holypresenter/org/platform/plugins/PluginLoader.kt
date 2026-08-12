@@ -4,6 +4,7 @@ import holypresenter.org.platform.api.module.HolyModule
 import java.io.File
 import java.net.URLClassLoader
 import java.util.ServiceLoader
+import java.util.jar.JarFile
 
 class PluginLoader(
     private val modulesDirectory: File
@@ -35,15 +36,45 @@ class PluginLoader(
             return emptyList()
         }
 
-        val modules = jarFiles.flatMap { jar ->
-            val classLoader = URLClassLoader(arrayOf(jar.toURI().toURL()), HolyModule::class.java.classLoader)
-            ServiceLoader.load(HolyModule::class.java, classLoader).toList().also { loaded ->
-                loaded.forEach { moduleArchives[it.metadata.id] = jar }
-            }
-        }
+        /*
+         * Все JAR доступны каждому внешнему модулю как зависимости.
+         * Но модулем считается только JAR с ServiceLoader-дескриптором.
+         * Поэтому platform-ui.jar остаётся общей библиотекой и никогда
+         * не может быть отключён или удалён как модуль.
+         */
+        val classLoader = URLClassLoader(
+            jarFiles.map { it.toURI().toURL() }.toTypedArray(),
+            HolyModule::class.java.classLoader
+        )
+        val moduleJars = jarFiles.filter(::declaresHolyModule)
+        val modules =
+            ServiceLoader.load(HolyModule::class.java, classLoader)
+                .toList()
+                .filter { module ->
+                    module.archiveFile() in moduleJars
+                }
+                .also { loaded ->
+                    loaded.forEach { module ->
+                        module.archiveFile()?.let { archive ->
+                            moduleArchives[module.metadata.id] = archive
+                        }
+                    }
+                }
 
         println("[PluginLoader] loaded modules: ${modules.map { it.metadata.name }}")
 
         return modules
     }
+
+    private fun declaresHolyModule(jar: File): Boolean =
+        runCatching {
+            JarFile(jar).use { archive ->
+                archive.getEntry("META-INF/services/${HolyModule::class.java.name}") != null
+            }
+        }.getOrDefault(false)
+
+    private fun HolyModule.archiveFile(): File? =
+        runCatching {
+            File(javaClass.protectionDomain.codeSource.location.toURI()).absoluteFile
+        }.getOrNull()
 }
