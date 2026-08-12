@@ -12,6 +12,12 @@ import holypresenter.org.platform.api.presentation.theme.*
 import holypresenter.org.platform.api.projection.ProjectionContent
 import holypresenter.org.platform.api.projection.ProjectionService
 import holypresenter.org.platform.api.audio.AudioPlaybackService
+import holypresenter.org.platform.api.planner.PlannerItem
+import holypresenter.org.platform.api.planner.PlannerReference
+import holypresenter.org.platform.api.planner.PlannerService
+import holypresenter.org.modules.quickoutput.QuickOutputState
+import holypresenter.org.modules.quickoutput.QuickOutputStateCodec
+import kotlinx.coroutines.delay
 import java.io.File
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -20,10 +26,13 @@ import javax.swing.filechooser.FileNameExtensionFilter
 fun QuickOutputWorkspace(context: ModuleContext) {
     val projector = remember(context) { context.services.get(ProjectionService::class) }
     val audio = remember(context) { context.services.get(AudioPlaybackService::class) }
+    val planner = remember(context) { context.services.get(PlannerService::class) }
     var text by remember { mutableStateOf("") }
     var mediaPath by remember { mutableStateOf<String?>(null) }
     var mediaType by remember { mutableStateOf(PresentationBackgroundType.COLOR) }
     var audioPath by remember { mutableStateOf<String?>(null) }
+    var tick by remember { mutableStateOf(0) }
+    LaunchedEffect(audio?.currentPath) { while (true) { delay(500); tick++ } }
 
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Быстрый вывод", style = MaterialTheme.typography.headlineMedium)
@@ -41,17 +50,27 @@ fun QuickOutputWorkspace(context: ModuleContext) {
             audioPath?.let { Text(File(it).name, modifier = Modifier.padding(top = 12.dp)) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(enabled = audioPath != null && audio != null, onClick = { audioPath?.let(audio!!::play) }) { Text("▶ Play") }
+            Button(enabled = audioPath != null && audio != null, onClick = { audioPath?.let { audio?.play(it) } }) { Text("▶ Play") }
             OutlinedButton(enabled = audio?.isPlaying == true, onClick = { audio?.pause() }) { Text("❚❚ Pause") }
             OutlinedButton(enabled = audio?.currentPath != null, onClick = { audio?.stop() }) { Text("■ Stop") }
         }
+        val position = remember(tick) { audio?.positionMs ?: 0 }
+        val duration = remember(tick) { audio?.durationMs ?: 0 }
+        Text("${formatTime(position)} / ${formatTime(duration)}")
+        audio?.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(enabled = projector != null, onClick = { projector?.show(quickContent(text, mediaPath, mediaType)) }) { Text("Показать сейчас") }
+            OutlinedButton(enabled = planner != null, onClick = {
+                val state = QuickOutputState(text, mediaPath, mediaType, audioPath)
+                planner?.add(PlannerItem.Generic(PlannerReference("quick-output", QuickOutputStateCodec.encode(state)), text.ifBlank { File(mediaPath ?: audioPath ?: "Быстрый вывод").name }))
+            }) { Text("+ В план") }
             OutlinedButton(enabled = projector != null, onClick = { projector?.toggleBlackScreen() }) { Text("Чёрный экран") }
             OutlinedButton(enabled = projector != null, onClick = { projector?.close() }) { Text("Закрыть") }
         }
     }
 }
+
+private fun formatTime(value: Long): String { val seconds = value / 1000; return "%02d:%02d".format(seconds / 60, seconds % 60) }
 
 private fun quickContent(text: String, path: String?, type: PresentationBackgroundType) = ProjectionContent.Slide(
     Presentation("quick-output", PresentationMetadata("Быстрый вывод"), PresentationTheme(PresentationBackground(type, path, if (type == PresentationBackgroundType.COLOR) 0xFF000000 else null), PresentationTextStyle(fontSize = 64, textColor = 0xFFFFFFFF, bold = true), PresentationOverlay(enabled = type != PresentationBackgroundType.COLOR)), listOf(PresentationSlide("quick-output-slide", listOf(TextElement("quick-output-text", SlotId("main"), text))))), 0

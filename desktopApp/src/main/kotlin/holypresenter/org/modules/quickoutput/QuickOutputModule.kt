@@ -5,6 +5,9 @@ import holypresenter.org.modules.quickoutput.ui.QuickOutputWorkspace
 import holypresenter.org.platform.api.module.HolyModule
 import holypresenter.org.platform.api.module.ModuleContext
 import holypresenter.org.platform.api.module.ModuleMetadata
+import holypresenter.org.platform.api.planner.PlannerItemHandlerRegistry
+import holypresenter.org.platform.api.projection.ProjectionService
+import holypresenter.org.platform.api.audio.AudioPlaybackService
 
 class QuickOutputModule : HolyModule {
     private lateinit var context: ModuleContext
@@ -20,6 +23,19 @@ class QuickOutputModule : HolyModule {
     )
 
     override fun onLoad(context: ModuleContext) { this.context = context }
+
+    override fun onEnable(context: ModuleContext) {
+        val registry = context.services.get(PlannerItemHandlerRegistry::class) ?: return
+        val projector = context.services.get(ProjectionService::class) ?: return
+        registry.register(
+            QuickOutputPlannerItemHandler(
+                projectionService = projector,
+                audioPlaybackService = context.services.get(AudioPlaybackService::class)
+            )
+        )
+    }
+
+    override fun onDisable() { context.services.get(PlannerItemHandlerRegistry::class)?.unregister(metadata.id) }
 
     @Composable
     override fun Workspace() { QuickOutputWorkspace(context) }
