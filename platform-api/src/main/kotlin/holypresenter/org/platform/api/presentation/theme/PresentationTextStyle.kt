@@ -12,4 +12,27 @@ data class PresentationTextStyle(
     val italic: Boolean = false,
     val outlineEnabled: Boolean = true,
     val shadowEnabled: Boolean = true
-)
+) {
+    /**
+     * JVM compatibility for modules compiled before auto-sizing was added.
+     */
+    constructor(
+        fontFamily: String?,
+        fontSize: Int,
+        textColor: Long,
+        bold: Boolean,
+        italic: Boolean,
+        outlineEnabled: Boolean,
+        shadowEnabled: Boolean
+    ) : this(
+        fontFamily = fontFamily,
+        fontSize = fontSize,
+        autoSize = true,
+        minFontSize = 24,
+        textColor = textColor,
+        bold = bold,
+        italic = italic,
+        outlineEnabled = outlineEnabled,
+        shadowEnabled = shadowEnabled
+    )
+}

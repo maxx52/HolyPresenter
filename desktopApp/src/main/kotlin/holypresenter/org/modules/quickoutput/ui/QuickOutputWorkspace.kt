@@ -11,6 +11,7 @@ import holypresenter.org.platform.api.presentation.element.TextElement
 import holypresenter.org.platform.api.presentation.theme.*
 import holypresenter.org.platform.api.projection.ProjectionContent
 import holypresenter.org.platform.api.projection.ProjectionService
+import holypresenter.org.platform.api.audio.AudioPlaybackService
 import java.io.File
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -18,9 +19,11 @@ import javax.swing.filechooser.FileNameExtensionFilter
 @Composable
 fun QuickOutputWorkspace(context: ModuleContext) {
     val projector = remember(context) { context.services.get(ProjectionService::class) }
+    val audio = remember(context) { context.services.get(AudioPlaybackService::class) }
     var text by remember { mutableStateOf("") }
     var mediaPath by remember { mutableStateOf<String?>(null) }
     var mediaType by remember { mutableStateOf(PresentationBackgroundType.COLOR) }
+    var audioPath by remember { mutableStateOf<String?>(null) }
 
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Быстрый вывод", style = MaterialTheme.typography.headlineMedium)
@@ -30,6 +33,17 @@ fun QuickOutputWorkspace(context: ModuleContext) {
             OutlinedButton(onClick = { choose("Изображение", "jpg", "jpeg", "png", "webp")?.let { mediaPath = it; mediaType = PresentationBackgroundType.IMAGE } }) { Text("Выбрать картинку") }
             OutlinedButton(onClick = { choose("Видео", "mp4", "mov", "mkv")?.let { mediaPath = it; mediaType = PresentationBackgroundType.VIDEO } }) { Text("Выбрать видео") }
             mediaPath?.let { Text(File(it).name, modifier = Modifier.padding(top = 12.dp)) }
+        }
+        HorizontalDivider()
+        Text("Музыкальный трек", style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedButton(onClick = { choose("Музыкальный трек", "mp3", "wav", "m4a", "aac", "flac", "ogg")?.let { audioPath = it } }) { Text("Выбрать трек") }
+            audioPath?.let { Text(File(it).name, modifier = Modifier.padding(top = 12.dp)) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(enabled = audioPath != null && audio != null, onClick = { audioPath?.let(audio!!::play) }) { Text("▶ Play") }
+            OutlinedButton(enabled = audio?.isPlaying == true, onClick = { audio?.pause() }) { Text("❚❚ Pause") }
+            OutlinedButton(enabled = audio?.currentPath != null, onClick = { audio?.stop() }) { Text("■ Stop") }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(enabled = projector != null, onClick = { projector?.show(quickContent(text, mediaPath, mediaType)) }) { Text("Показать сейчас") }

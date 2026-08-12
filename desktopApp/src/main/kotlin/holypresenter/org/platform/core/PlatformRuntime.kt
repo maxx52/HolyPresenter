@@ -11,6 +11,8 @@ import holypresenter.org.platform.api.planner.PlannerService
 import holypresenter.org.platform.api.projection.ProjectionService
 import holypresenter.org.platform.video.DefaultVideoPlaybackService
 import holypresenter.org.platform.api.video.VideoPlaybackService
+import holypresenter.org.platform.api.audio.AudioPlaybackService
+import holypresenter.org.platform.audio.VlcAudioPlaybackService
 import holypresenter.org.platform.services.DefaultServiceRegistry
 import holypresenter.org.platform.layout.DefaultLayoutService
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
@@ -40,6 +42,8 @@ class PlatformRuntime(
 
     private val videoPlaybackService =
         DefaultVideoPlaybackService()
+
+    private val audioPlaybackService = VlcAudioPlaybackService()
 
     private val projectionService =
         DefaultProjectionService(
@@ -154,6 +158,11 @@ class PlatformRuntime(
         )
 
         serviceRegistry.register(
+            AudioPlaybackService::class,
+            audioPlaybackService
+        )
+
+        serviceRegistry.register(
             ProjectionService::class,
             projectionService
         )
@@ -178,6 +187,7 @@ class PlatformRuntime(
     fun stop() {
         projectionService.close()
         videoPlaybackService.release()
+        audioPlaybackService.release()
         layoutService.save()
         settingsService.save()
     }
