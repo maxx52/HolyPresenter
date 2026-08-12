@@ -7,7 +7,8 @@ import java.util.ServiceLoader
 import java.util.jar.JarFile
 
 class PluginLoader(
-    private val modulesDirectory: File
+    private val bundledModulesDirectory: File,
+    private val installedModulesDirectory: File
 ) {
     private val moduleArchives = mutableMapOf<String, File>()
 
@@ -18,26 +19,26 @@ class PluginLoader(
     fun importModuleArchive(source: File): File {
         require(source.isFile && source.extension.equals("jar", true)) { "Выберите JAR модуля" }
         require(declaresHolyModule(source)) { "В выбранном JAR нет модуля HolyPresenter" }
-        modulesDirectory.mkdirs()
-        val target = File(modulesDirectory, source.name)
+        installedModulesDirectory.mkdirs()
+        val target = File(installedModulesDirectory, source.name)
         source.copyTo(target, overwrite = true)
         return target
     }
     fun loadModules(): List<HolyModule> {
-        println("[PluginLoader] modules dir: ${modulesDirectory.absolutePath}")
-        println("[PluginLoader] exists: ${modulesDirectory.exists()}")
+        installedModulesDirectory.mkdirs()
+        val directories = listOf(
+            bundledModulesDirectory,
+            installedModulesDirectory
+        ).distinct()
+        println("[PluginLoader] modules dirs: ${directories.map(File::getAbsolutePath)}")
 
-        if (!modulesDirectory.exists()) {
-            modulesDirectory.mkdirs()
-            return emptyList()
-        }
-
-        val jarFiles = modulesDirectory
-            .listFiles { file ->
+        val jarFiles = directories.flatMap { directory ->
+            directory.listFiles { file ->
                 file.isFile && file.extension.equals("jar", ignoreCase = true)
             }
             ?.toList()
             ?: emptyList()
+        }.distinctBy { file -> file.absolutePath }
 
         println("[PluginLoader] jars: ${jarFiles.map { it.name }}")
 

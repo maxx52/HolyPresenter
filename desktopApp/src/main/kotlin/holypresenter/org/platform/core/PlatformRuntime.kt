@@ -100,8 +100,11 @@ class PlatformRuntime(
         settingsService = settingsService
     )
 
+    private val installedModulesDirectory = File(pathService.home, "modules")
+
     private val pluginLoader = PluginLoader(
-        pathService.modules
+        bundledModulesDirectory = pathService.modules,
+        installedModulesDirectory = installedModulesDirectory
     )
 
     private val builtinModules = mapOf(
