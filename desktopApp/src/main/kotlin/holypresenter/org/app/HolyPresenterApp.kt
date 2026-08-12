@@ -8,14 +8,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
-import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberWindowState
 import holypresenter.org.app.ui.MainWindow
-import holypresenter.org.app.ui.SplashScreen
 import holypresenter.org.platform.core.PlatformRuntime
 import holypresenter.org.platform.logging.StartupLog
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +26,7 @@ private sealed interface StartupState {
 @Composable
 fun HolyPresenterApp(
     onExit: () -> Unit,
+    onReady: () -> Unit
 ) {
     var startup by remember { mutableStateOf<StartupState>(StartupState.Loading) }
 
@@ -53,35 +50,30 @@ fun HolyPresenterApp(
                 runtime
             }
         }.fold(
-            onSuccess = StartupState::Ready,
+            onSuccess = { platform ->
+                onReady()
+                StartupState.Ready(platform)
+            },
             onFailure = { error ->
                 StartupLog.error("Platform startup failed", error)
+                onReady()
                 StartupState.Failed(error.message ?: "Неизвестная ошибка запуска")
             }
         )
     }
 
     when (val currentStartup = startup) {
-        StartupState.Loading,
+        StartupState.Loading -> Window(
+            visible = false,
+            onCloseRequest = onExit
+        ) {}
+
         is StartupState.Failed -> Window(
             onCloseRequest = onExit,
             title = "HolyPresenter",
-            state = rememberWindowState(
-                size = DpSize(560.dp, 340.dp),
-                position = WindowPosition.Aligned(Alignment.Center)
-            ),
-            resizable = false,
-            undecorated = true
         ) {
             MaterialTheme {
-                SplashScreen(
-                    message = if (currentStartup is StartupState.Failed) {
-                        "Ошибка запуска: ${currentStartup.message}"
-                    } else {
-                        "Загрузка HolyPresenter и модулей…"
-                    },
-                    isError = currentStartup is StartupState.Failed
-                )
+                androidx.compose.material3.Text("Ошибка запуска: ${currentStartup.message}")
             }
         }
 

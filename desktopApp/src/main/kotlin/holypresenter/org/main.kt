@@ -2,6 +2,7 @@ package holypresenter.org
 
 import androidx.compose.ui.window.application
 import holypresenter.org.app.HolyPresenterApp
+import holypresenter.org.app.NativeStartupSplash
 import holypresenter.org.platform.logging.StartupLog
 
 fun main() {
@@ -18,6 +19,7 @@ fun main() {
     }
 
     StartupLog.info("Entering Compose application")
+    val splash = NativeStartupSplash.show()
 
     try {
         application {
@@ -25,7 +27,8 @@ fun main() {
                 onExit = {
                     StartupLog.info("Application exit requested")
                     exitApplication()
-                }
+                },
+                onReady = splash::close
             )
         }
     } catch (error: Throwable) {
@@ -36,6 +39,7 @@ fun main() {
 
         throw error
     } finally {
+        splash.close()
         StartupLog.info("HolyPresenter process finished")
     }
 }
