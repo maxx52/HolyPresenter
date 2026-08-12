@@ -92,14 +92,19 @@ class VideoOverlayWindow(
                 Font.PLAIN
         }
 
-        graphics.font = Font(
-            Font.SANS_SERIF,
-            fontStyle,
-            content.fontSize.coerceAtLeast(24)
+        val fontFamily = content.fontFamily?.takeIf(String::isNotBlank) ?: Font.SANS_SERIF
+        val requestedSize = content.fontSize.coerceAtLeast(24)
+        val sourceLines = content.text.lines()
+        val actualSize = findFittingFontSize(
+            graphics = graphics,
+            sourceLines = sourceLines,
+            fontFamily = fontFamily,
+            fontStyle = fontStyle,
+            requestedSize = requestedSize
         )
-
-        val lines = content.text.lines()
+        graphics.font = Font(fontFamily, fontStyle, actualSize)
         val metrics = graphics.fontMetrics
+        val lines = wrapLines(sourceLines, metrics)
         val lineHeight = metrics.height
         val totalHeight = lines.size * lineHeight
 
@@ -128,6 +133,46 @@ class VideoOverlayWindow(
             y += lineHeight
         }
     }
+
+    private fun findFittingFontSize(
+        graphics: Graphics2D,
+        sourceLines: List<String>,
+        fontFamily: String,
+        fontStyle: Int,
+        requestedSize: Int
+    ): Int {
+        for (size in requestedSize downTo 18) {
+            graphics.font = Font(fontFamily, fontStyle, size)
+            val metrics = graphics.fontMetrics
+            val lines = wrapLines(sourceLines, metrics)
+            if (lines.size * metrics.height <= height) return size
+        }
+        return 18
+    }
+
+    private fun wrapLines(
+        sourceLines: List<String>,
+        metrics: java.awt.FontMetrics
+    ): List<String> =
+        sourceLines.flatMap { sourceLine ->
+            if (sourceLine.isBlank() || metrics.stringWidth(sourceLine) <= width) {
+                listOf(sourceLine)
+            } else {
+                buildList {
+                    var line = ""
+                    sourceLine.split(Regex("\\s+")).forEach { word ->
+                        val candidate = if (line.isEmpty()) word else "$line $word"
+                        if (metrics.stringWidth(candidate) <= width) {
+                            line = candidate
+                        } else {
+                            if (line.isNotEmpty()) add(line)
+                            line = word
+                        }
+                    }
+                    if (line.isNotEmpty()) add(line)
+                }
+            }
+        }
 
     private fun drawOutline(
         graphics: Graphics2D,
