@@ -99,6 +99,23 @@ class PlatformRuntime(
         pathService.modules
     )
 
+    private val builtinModuleIds = setOf("welcome", "presentation-test")
+    private val disabledModuleIds = ModulePreferences.disabledIds().toMutableSet()
+
+    fun disableModule(moduleId: String) {
+        moduleRegistry.unregister(moduleId)
+        disabledModuleIds += moduleId
+        ModulePreferences.setDisabled(disabledModuleIds)
+    }
+
+    fun deleteModule(moduleId: String): Boolean {
+        if (moduleId in builtinModuleIds) return false
+        disableModule(moduleId)
+        return pluginLoader.deleteModuleArchive(moduleId)
+    }
+
+    fun canDeleteModule(moduleId: String): Boolean = moduleId !in builtinModuleIds && pluginLoader.hasArchive(moduleId)
+
     private fun registerServices() {
         serviceRegistry.register(
             PlannerItemHandlerRegistry::class,
@@ -145,17 +162,21 @@ class PlatformRuntime(
     }
 
     private fun registerBuiltinModules() {
-        moduleRegistry.register(WelcomeModule())
-        moduleRegistry.register(PresentationTestModule())
+        registerIfEnabled(WelcomeModule())
+        registerIfEnabled(PresentationTestModule())
     }
 
     private fun registerExternalModules() {
         pluginLoader.loadModules().forEach { module ->
             runCatching {
-                moduleRegistry.register(module)
+                registerIfEnabled(module)
             }.onFailure { error ->
                 println("Failed to load module ${module.metadata.id}: ${error.message}")
             }
         }
+    }
+
+    private fun registerIfEnabled(module: holypresenter.org.platform.api.module.HolyModule) {
+        if (module.metadata.id !in disabledModuleIds) moduleRegistry.register(module)
     }
 }

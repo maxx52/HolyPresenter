@@ -86,7 +86,10 @@ fun HolyPresenterApp(
 
         MaterialTheme {
             MainWindow(
-                modules = platform.moduleRegistry.modules
+                modules = platform.moduleRegistry.modules,
+                onDisableModule = platform::disableModule,
+                onDeleteModule = platform::deleteModule,
+                canDeleteModule = platform::canDeleteModule
             )
         }
     }

@@ -8,6 +8,11 @@ import java.util.ServiceLoader
 class PluginLoader(
     private val modulesDirectory: File
 ) {
+    private val moduleArchives = mutableMapOf<String, File>()
+
+    fun hasArchive(moduleId: String): Boolean = moduleArchives[moduleId]?.isFile == true
+
+    fun deleteModuleArchive(moduleId: String): Boolean = moduleArchives.remove(moduleId)?.delete() == true
     fun loadModules(): List<HolyModule> {
         println("[PluginLoader] modules dir: ${modulesDirectory.absolutePath}")
         println("[PluginLoader] exists: ${modulesDirectory.exists()}")
@@ -30,18 +35,12 @@ class PluginLoader(
             return emptyList()
         }
 
-        val urls = jarFiles
-            .map { it.toURI().toURL() }
-            .toTypedArray()
-
-        val classLoader = URLClassLoader(
-            urls,
-            HolyModule::class.java.classLoader
-        )
-
-        val modules = ServiceLoader
-            .load(HolyModule::class.java, classLoader)
-            .toList()
+        val modules = jarFiles.flatMap { jar ->
+            val classLoader = URLClassLoader(arrayOf(jar.toURI().toURL()), HolyModule::class.java.classLoader)
+            ServiceLoader.load(HolyModule::class.java, classLoader).toList().also { loaded ->
+                loaded.forEach { moduleArchives[it.metadata.id] = jar }
+            }
+        }
 
         println("[PluginLoader] loaded modules: ${modules.map { it.metadata.name }}")
 

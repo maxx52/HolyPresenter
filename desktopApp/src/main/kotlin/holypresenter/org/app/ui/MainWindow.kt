@@ -15,7 +15,10 @@ import holypresenter.org.platform.core.DockManager
 
 @Composable
 fun MainWindow(
-    modules: List<HolyModule>
+    modules: List<HolyModule>,
+    onDisableModule: (String) -> Unit,
+    onDeleteModule: (String) -> Boolean,
+    canDeleteModule: (String) -> Boolean
 ) {
     var selectedModule by remember {
         mutableStateOf(modules.firstOrNull())
@@ -35,6 +38,9 @@ fun MainWindow(
 
     LaunchedEffect(modules) {
         dockManager.registerModules(modules)
+        if (selectedModule !in modules) {
+            selectedModule = modules.firstOrNull()
+        }
     }
 
     val rightPanels = dockManager.panels.filter {
@@ -81,6 +87,9 @@ fun MainWindow(
                     onModuleClick = {
                         selectedModule = it
                     },
+                    onDisableModule = onDisableModule,
+                    onDeleteModule = onDeleteModule,
+                    canDeleteModule = canDeleteModule,
                     onShowPanel = dockManager::show
                 )
 
@@ -203,6 +212,9 @@ private fun ModuleListPanel(
     onToggleExpanded: () -> Unit,
     hiddenPanels: List<DockPanelState>,
     onModuleClick: (HolyModule) -> Unit,
+    onDisableModule: (String) -> Unit,
+    onDeleteModule: (String) -> Boolean,
+    canDeleteModule: (String) -> Boolean,
     onShowPanel: (String) -> Unit
 ) {
     Column(
@@ -232,6 +244,7 @@ private fun ModuleListPanel(
         Spacer(Modifier.height(12.dp))
 
         modules.forEach { module ->
+            var menuOpen by remember(module.metadata.id) { mutableStateOf(false) }
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -255,8 +268,24 @@ private fun ModuleListPanel(
 
                     if (expanded) {
                         Text(
-                            module.metadata.name
+                            module.metadata.name,
+                            modifier = Modifier.weight(1f)
                         )
+                        Box {
+                            TextButton(onClick = { menuOpen = true }) { Text("⋮") }
+                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                DropdownMenuItem(
+                                    text = { Text("Отключить") },
+                                    onClick = { menuOpen = false; onDisableModule(module.metadata.id) }
+                                )
+                                if (canDeleteModule(module.metadata.id)) {
+                                    DropdownMenuItem(
+                                        text = { Text("Удалить") },
+                                        onClick = { menuOpen = false; onDeleteModule(module.metadata.id) }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
