@@ -53,22 +53,29 @@ abstract class VerifyBundledModules : DefaultTask() {
             )
         }
 
-        val songsExists =
-            jars.any { file ->
-                    file.isFile && file.name.equals("songs.jar", ignoreCase = true
-                )
-            }
+        val availableJarNames = jars
+            .filter { it.isFile }
+            .map { it.name.lowercase() }
+            .toSet()
+        val requiredModuleJars = setOf(
+            "bible.jar",
+            "songs.jar",
+            "marketplace.jar"
+        )
+        val missingModuleJars = requiredModuleJars - availableJarNames
 
-        if (!songsExists) {
+        if (missingModuleJars.isNotEmpty()) {
             throw GradleException(
                 """
-                Не найден модуль Songs.
+                В desktopApp/modules отсутствуют обязательные модули:
+                ${missingModuleJars.sorted().joinToString("\n") { "- $it" }}
 
-                Ожидается:
-                desktopApp/modules/songs.jar
+                Перед созданием MSI соберите соответствующие проекты. Например,
+                Marketplace собирается командой:
+                .\gradlew.bat :marketplace:jar
 
-                Сначала соберите HolyPresenter-Songs,
-                чтобы installModule скопировал songs.jar.
+                Задача installModule скопирует marketplace.jar в
+                HolyPresenter/desktopApp/modules.
                 """.trimIndent()
             )
         }
@@ -167,6 +174,12 @@ compose.desktop {
     application {
         mainClass = "holypresenter.org.MainKt"
 
+        buildTypes.release.proguard {
+            configurationFiles.from(
+                project.file("compose-desktop.pro")
+            )
+        }
+
         /*
          * Compose будет использовать JDK,
          * на которой работает Gradle daemon.
@@ -204,7 +217,7 @@ compose.desktop {
             )
 
             packageName = "HolyPresenter"
-            packageVersion = "1.0.3"
+            packageVersion = "1.0.4"
 
             /*
              * Временно включаем все модули JDK,

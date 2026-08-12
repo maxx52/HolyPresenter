@@ -6,8 +6,11 @@ import holypresenter.org.platform.api.video.VideoPlaybackState
 import holypresenter.org.platform.api.video.VideoPlaybackStatus
 import java.io.File
 
-class DefaultVideoPlaybackService : VideoPlaybackService {
-    private val videoWindow = VideoWindow()
+class DefaultVideoPlaybackService(
+    private val videoWindowFactory: () -> VideoWindow = ::VideoWindow
+) : VideoPlaybackService {
+    private var videoWindow: VideoWindow? = null
+    private var pendingOverlay: VideoOverlayContent? = null
     private var currentState = VideoPlaybackState()
 
     override val state: VideoPlaybackState
@@ -25,11 +28,20 @@ class DefaultVideoPlaybackService : VideoPlaybackService {
             return
         }
 
-        videoWindow.play(
-            path = file.absolutePath,
-            loop = loop,
-            muted = muted
-        )
+        val window = getOrCreateVideoWindow() ?: return
+
+        val started = runCatching {
+            pendingOverlay?.let(window::updateOverlay)
+            window.play(
+                path = file.absolutePath,
+                loop = loop,
+                muted = muted
+            )
+        }.onFailure { error ->
+            println("Video playback unavailable: ${error.message}")
+        }.isSuccess
+
+        if (!started) return
 
         currentState = VideoPlaybackState(
             status = VideoPlaybackStatus.PLAYING,
@@ -47,7 +59,8 @@ class DefaultVideoPlaybackService : VideoPlaybackService {
             return
         }
 
-        videoWindow.pause()
+        val window = videoWindow ?: return
+        window.pause()
 
         currentState = currentState.copy(
             status = VideoPlaybackStatus.PAUSED
@@ -62,7 +75,8 @@ class DefaultVideoPlaybackService : VideoPlaybackService {
             return
         }
 
-        videoWindow.resume()
+        val window = videoWindow ?: return
+        window.resume()
 
         currentState = currentState.copy(
             status = VideoPlaybackStatus.PLAYING
@@ -73,18 +87,34 @@ class DefaultVideoPlaybackService : VideoPlaybackService {
         if (currentState.status == VideoPlaybackStatus.STOPPED) {
             return
         }
-        videoWindow.stop()
+        videoWindow?.stop()
         currentState = VideoPlaybackState()
     }
 
     override fun release() {
-        videoWindow.release()
+        videoWindow?.let { window ->
+            runCatching(window::release)
+        }
+        videoWindow = null
+        pendingOverlay = null
         currentState = VideoPlaybackState()
     }
 
     override fun updateOverlay(
         content: VideoOverlayContent
     ) {
-        videoWindow.updateOverlay(content)
+        pendingOverlay = content
+        videoWindow?.updateOverlay(content)
+    }
+
+    private fun getOrCreateVideoWindow(): VideoWindow? {
+        videoWindow?.let { return it }
+
+        return runCatching(videoWindowFactory)
+            .onFailure { error ->
+                println("VLC video engine is unavailable: ${error.message}")
+            }
+            .getOrNull()
+            ?.also { videoWindow = it }
     }
 }

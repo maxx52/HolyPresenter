@@ -15,11 +15,19 @@
 Перед созданием установщика дополнительно выполните:
 
 ```powershell
+Push-Location ..\HolyPresenter-Modules
+.\gradlew.bat :marketplace:jar
+Pop-Location
+
+Test-Path .\desktopApp\modules\marketplace.jar
 .\gradlew.bat :desktopApp:packageReleaseDistribution
 ```
 
-Проверка `verifyBundledModules` убеждается, что в дистрибутиве есть `songs.jar`
-и `platform-ui-*.jar`, а каждый встроенный JAR читается без ошибок.
+`Test-Path` должен вывести `True`. Иначе Marketplace не попадёт в MSI.
+
+Проверка `verifyBundledModules` убеждается, что в дистрибутиве есть `bible.jar`,
+`songs.jar`, `marketplace.jar` и `platform-ui-*.jar`, а каждый встроенный JAR
+читается без ошибок.
 
 ## 2. Обязательный ручной прогон
 
