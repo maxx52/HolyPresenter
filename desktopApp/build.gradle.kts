@@ -24,6 +24,34 @@ abstract class VerifyBundledModules : DefaultTask() {
     fun verify() {
         val jars = moduleJars.files
 
+        val unreadableJars = jars.filter { file ->
+            !file.isFile || runCatching {
+                java.util.jar.JarFile(file).use { archive ->
+                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                    val entries = archive.entries()
+                    while (entries.hasMoreElements()) {
+                        archive.getInputStream(entries.nextElement()).use { input ->
+                            while (input.read(buffer) != -1) {
+                                // Читаем поток до конца: так проверяется CRC архива.
+                            }
+                        }
+                    }
+                }
+            }.isFailure
+        }
+
+        if (unreadableJars.isNotEmpty()) {
+            throw GradleException(
+                """
+                В desktopApp/modules есть повреждённые JAR-архивы:
+                ${unreadableJars.joinToString("\n") { "- ${it.name}" }}
+
+                Пересоберите и скопируйте эти модули заново. Приложение не
+                должно распространяться с повреждёнными встроенными модулями.
+                """.trimIndent()
+            )
+        }
+
         val songsExists =
             jars.any { file ->
                     file.isFile && file.name.equals("songs.jar", ignoreCase = true

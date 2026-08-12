@@ -22,6 +22,9 @@ Use the run configurations provided by the run widget in your IDE's toolbar. You
 Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
 
 - Desktop tests: `./gradlew :shared:jvmTest`
+- Release checks: `./gradlew :desktopApp:test :desktopApp:verifyBundledModules`
+
+Before delivering a build, follow the [release test checklist](./TESTING.md).
 
 ---
 

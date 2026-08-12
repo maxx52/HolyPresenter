@@ -56,34 +56,61 @@ class PluginLoader(
          * Поэтому platform-ui.jar остаётся общей библиотекой и никогда
          * не может быть отключён или удалён как модуль.
          */
-        val classLoader = URLClassLoader(
-            jarFiles.map { it.toURI().toURL() }.toTypedArray(),
-            HolyModule::class.java.classLoader
-        )
         val moduleJars = jarFiles.filter(::declaresHolyModule)
-        val modules =
-            ServiceLoader.load(HolyModule::class.java, classLoader)
-                .toList()
-                .filter { module ->
-                    module.archiveFile() in moduleJars
+        val dependencyJars = jarFiles - moduleJars.toSet()
+        val modules = moduleJars.mapNotNull { moduleJar ->
+            loadModule(moduleJar, dependencyJars)
+        }.also { loaded ->
+            loaded.forEach { module ->
+                module.archiveFile()?.let { archive ->
+                    moduleArchives[module.metadata.id] = archive
                 }
-                .also { loaded ->
-                    loaded.forEach { module ->
-                        module.archiveFile()?.let { archive ->
-                            moduleArchives[module.metadata.id] = archive
-                        }
-                    }
-                }
+            }
+        }
 
         println("[PluginLoader] loaded modules: ${modules.map { it.metadata.name }}")
 
         return modules
     }
 
+    /**
+     * Загружаем каждый модуль изолированно: один повреждённый JAR или
+     * отсутствующая зависимость не должны останавливать HolyPresenter.
+     */
+    private fun loadModule(moduleJar: File, dependencyJars: List<File>): HolyModule? =
+        runCatching {
+            val dependenciesClassLoader = URLClassLoader(
+                dependencyJars.map { it.toURI().toURL() }.toTypedArray(),
+                HolyModule::class.java.classLoader
+            )
+            val moduleClassLoader = URLClassLoader(
+                arrayOf(moduleJar.toURI().toURL()),
+                dependenciesClassLoader
+            )
+            ServiceLoader.load(HolyModule::class.java, moduleClassLoader).firstOrNull()
+        }.onFailure { error ->
+            println(
+                "[PluginLoader] skipped ${moduleJar.name}: " +
+                    (error.message ?: error::class.java.simpleName)
+            )
+        }.getOrNull()
+
     private fun declaresHolyModule(jar: File): Boolean =
         runCatching {
             JarFile(jar).use { archive ->
-                archive.getEntry("META-INF/services/${HolyModule::class.java.name}") != null
+                val descriptor = archive.getEntry(
+                    "META-INF/services/${HolyModule::class.java.name}"
+                ) ?: return@use false
+
+                archive.getInputStream(descriptor)
+                    .bufferedReader()
+                    .readLines()
+                    .asSequence()
+                    .map(String::trim)
+                    .filter { it.isNotEmpty() && !it.startsWith('#') }
+                    .any { providerClass ->
+                        archive.getEntry(providerClass.replace('.', '/') + ".class") != null
+                    }
             }
         }.getOrDefault(false)
 
