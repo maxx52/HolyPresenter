@@ -295,15 +295,29 @@ private class ProjectionPanel(private var textVisible: Boolean = true) : JPanel(
             return
         }
 
-        graphics.font = Font(
+        val lines = text.lines()
+        val fontFamily =
             style.fontFamily
                 ?.takeIf(String::isNotBlank)
-                ?: Font.SANS_SERIF,
-            style.toFontStyle(),
-            style.fontSize.coerceAtLeast(12)
-        )
+                ?: Font.SANS_SERIF
+        val fontStyle = style.toFontStyle()
+        val requestedSize = style.fontSize.coerceAtLeast(12)
+        val actualSize =
+            if (style.autoSize) {
+                findFittingFontSize(
+                    graphics = graphics,
+                    lines = lines,
+                    fontFamily = fontFamily,
+                    fontStyle = fontStyle,
+                    requestedSize = requestedSize,
+                    minimumSize = style.minFontSize.coerceAtLeast(12),
+                    bounds = bounds
+                )
+            } else {
+                requestedSize
+            }
 
-        val lines = text.lines()
+        graphics.font = Font(fontFamily, fontStyle, actualSize)
         val metrics = graphics.fontMetrics
         val lineHeight = metrics.height
         val totalHeight = lines.size * lineHeight
@@ -344,6 +358,29 @@ private class ProjectionPanel(private var textVisible: Boolean = true) : JPanel(
         } finally {
             graphics.clip = previousClip
         }
+    }
+
+    private fun findFittingFontSize(
+        graphics: Graphics2D,
+        lines: List<String>,
+        fontFamily: String,
+        fontStyle: Int,
+        requestedSize: Int,
+        minimumSize: Int,
+        bounds: Rectangle
+    ): Int {
+        for (size in requestedSize downTo minimumSize) {
+            graphics.font = Font(fontFamily, fontStyle, size)
+            val metrics = graphics.fontMetrics
+            val widestLine = lines.maxOfOrNull(metrics::stringWidth) ?: 0
+            val totalHeight = lines.size * metrics.height
+
+            if (widestLine <= bounds.width && totalHeight <= bounds.height) {
+                return size
+            }
+        }
+
+        return minimumSize
     }
 
     private fun drawTextShadow(
