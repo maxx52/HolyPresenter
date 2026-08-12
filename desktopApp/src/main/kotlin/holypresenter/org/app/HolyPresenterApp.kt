@@ -89,7 +89,10 @@ fun HolyPresenterApp(
                 modules = platform.moduleRegistry.modules,
                 onDisableModule = platform::disableModule,
                 onDeleteModule = platform::deleteModule,
-                canDeleteModule = platform::canDeleteModule
+                canDeleteModule = platform::canDeleteModule,
+                disabledBuiltinModuleIds = platform.disabledBuiltinModuleIds(),
+                onEnableBuiltinModule = platform::enableBuiltinModule,
+                onImportModule = platform::importModuleArchive
             )
         }
     }

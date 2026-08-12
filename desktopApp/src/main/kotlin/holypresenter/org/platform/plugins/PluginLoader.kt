@@ -14,6 +14,15 @@ class PluginLoader(
     fun hasArchive(moduleId: String): Boolean = moduleArchives[moduleId]?.isFile == true
 
     fun deleteModuleArchive(moduleId: String): Boolean = moduleArchives.remove(moduleId)?.delete() == true
+
+    fun importModuleArchive(source: File): File {
+        require(source.isFile && source.extension.equals("jar", true)) { "Выберите JAR модуля" }
+        require(declaresHolyModule(source)) { "В выбранном JAR нет модуля HolyPresenter" }
+        modulesDirectory.mkdirs()
+        val target = File(modulesDirectory, source.name)
+        source.copyTo(target, overwrite = true)
+        return target
+    }
     fun loadModules(): List<HolyModule> {
         println("[PluginLoader] modules dir: ${modulesDirectory.absolutePath}")
         println("[PluginLoader] exists: ${modulesDirectory.exists()}")

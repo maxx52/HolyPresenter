@@ -2,6 +2,7 @@ package holypresenter.org.platform.core
 
 import holypresenter.org.modules.presentationtest.PresentationTestModule
 import holypresenter.org.modules.welcome.WelcomeModule
+import holypresenter.org.modules.quickoutput.QuickOutputModule
 import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
 import holypresenter.org.platform.api.module.ModuleContext
@@ -99,13 +100,33 @@ class PlatformRuntime(
         pathService.modules
     )
 
-    private val builtinModuleIds = setOf("welcome", "presentation-test")
+    private val builtinModules = mapOf(
+        "welcome" to ::WelcomeModule,
+        "presentation-test" to ::PresentationTestModule,
+        "quick-output" to ::QuickOutputModule
+    )
+    private val builtinModuleIds = builtinModules.keys
     private val disabledModuleIds = ModulePreferences.disabledIds().toMutableSet()
 
     fun disableModule(moduleId: String) {
         moduleRegistry.unregister(moduleId)
         disabledModuleIds += moduleId
         ModulePreferences.setDisabled(disabledModuleIds)
+    }
+
+    fun enableBuiltinModule(moduleId: String): Boolean {
+        val factory = builtinModules[moduleId] ?: return false
+        disabledModuleIds -= moduleId
+        ModulePreferences.setDisabled(disabledModuleIds)
+        moduleRegistry.register(factory())
+        return true
+    }
+
+    fun disabledBuiltinModuleIds(): Set<String> = disabledModuleIds.intersect(builtinModuleIds)
+
+    fun importModuleArchive(archive: File): String {
+        pluginLoader.importModuleArchive(archive)
+        return "Модуль добавлен. Перезапустите HolyPresenter, чтобы включить его."
     }
 
     fun deleteModule(moduleId: String): Boolean {
@@ -162,8 +183,7 @@ class PlatformRuntime(
     }
 
     private fun registerBuiltinModules() {
-        registerIfEnabled(WelcomeModule())
-        registerIfEnabled(PresentationTestModule())
+        builtinModules.values.forEach { registerIfEnabled(it()) }
     }
 
     private fun registerExternalModules() {

@@ -12,13 +12,19 @@ import holypresenter.org.platform.api.docking.DockPanelState
 import holypresenter.org.platform.api.docking.DockPosition
 import holypresenter.org.platform.api.module.HolyModule
 import holypresenter.org.platform.core.DockManager
+import java.io.File
+import javax.swing.JFileChooser
+import javax.swing.filechooser.FileNameExtensionFilter
 
 @Composable
 fun MainWindow(
     modules: List<HolyModule>,
     onDisableModule: (String) -> Unit,
     onDeleteModule: (String) -> Boolean,
-    canDeleteModule: (String) -> Boolean
+    canDeleteModule: (String) -> Boolean,
+    disabledBuiltinModuleIds: Set<String>,
+    onEnableBuiltinModule: (String) -> Boolean,
+    onImportModule: (File) -> String
 ) {
     var selectedModule by remember {
         mutableStateOf(modules.firstOrNull())
@@ -90,6 +96,9 @@ fun MainWindow(
                     onDisableModule = onDisableModule,
                     onDeleteModule = onDeleteModule,
                     canDeleteModule = canDeleteModule,
+                    disabledBuiltinModuleIds = disabledBuiltinModuleIds,
+                    onEnableBuiltinModule = onEnableBuiltinModule,
+                    onImportModule = onImportModule,
                     onShowPanel = dockManager::show
                 )
 
@@ -215,8 +224,12 @@ private fun ModuleListPanel(
     onDisableModule: (String) -> Unit,
     onDeleteModule: (String) -> Boolean,
     canDeleteModule: (String) -> Boolean,
+    disabledBuiltinModuleIds: Set<String>,
+    onEnableBuiltinModule: (String) -> Boolean,
+    onImportModule: (File) -> String,
     onShowPanel: (String) -> Unit
 ) {
+    var importResult by remember { mutableStateOf<String?>(null) }
     Column(
         modifier = Modifier
             .width(if (expanded) 240.dp else 72.dp)
@@ -242,6 +255,16 @@ private fun ModuleListPanel(
         }
 
         Spacer(Modifier.height(12.dp))
+
+        if (expanded) {
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    chooseModuleJar()?.let { importResult = onImportModule(it) }
+                }
+            ) { Text("+ Импортировать модуль") }
+            Spacer(Modifier.height(12.dp))
+        }
 
         modules.forEach { module ->
             var menuOpen by remember(module.metadata.id) { mutableStateOf(false) }
@@ -292,6 +315,19 @@ private fun ModuleListPanel(
             Spacer(Modifier.height(8.dp))
         }
 
+        if (expanded && disabledBuiltinModuleIds.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Text("Отключённые встроенные", style = MaterialTheme.typography.titleSmall)
+            disabledBuiltinModuleIds.forEach { id ->
+                TextButton(onClick = { onEnableBuiltinModule(id) }) { Text("Включить: $id") }
+            }
+        }
+
+        importResult?.let { message ->
+            Spacer(Modifier.height(8.dp))
+            Text(message, style = MaterialTheme.typography.bodySmall)
+        }
+
         if (expanded && hiddenPanels.isNotEmpty()) {
             Spacer(Modifier.height(24.dp))
 
@@ -313,6 +349,13 @@ private fun ModuleListPanel(
             }
         }
     }
+}
+
+private fun chooseModuleJar(): File? = JFileChooser().run {
+    dialogTitle = "Импорт модуля HolyPresenter"
+    isAcceptAllFileFilterUsed = false
+    fileFilter = FileNameExtensionFilter("Модуль HolyPresenter (*.jar)", "jar")
+    if (showOpenDialog(null) == JFileChooser.APPROVE_OPTION) selectedFile else null
 }
 
 @Composable
