@@ -15,12 +15,20 @@ import holypresenter.org.platform.logging.StartupLog
 fun HolyPresenterApp(
     onExit: () -> Unit,
 ) {
+    var runtimeRef: PlatformRuntime? = null
+
     val platform =
         remember {
             StartupLog.info("Creating PlatformRuntime")
 
             try {
-                PlatformRuntime().also {
+                PlatformRuntime(
+                    onExit = {
+                        runtimeRef?.stop()
+                        onExit()
+                    }
+                ).also {
+                    runtimeRef = it
                     StartupLog.info("PlatformRuntime created successfully")
                 }
             } catch (error: Throwable) {

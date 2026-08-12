@@ -13,6 +13,8 @@ import holypresenter.org.platform.video.DefaultVideoPlaybackService
 import holypresenter.org.platform.api.video.VideoPlaybackService
 import holypresenter.org.platform.api.audio.AudioPlaybackService
 import holypresenter.org.platform.audio.VlcAudioPlaybackService
+import holypresenter.org.platform.api.application.ApplicationLifecycleService
+import holypresenter.org.platform.application.DesktopApplicationLifecycleService
 import holypresenter.org.platform.services.DefaultServiceRegistry
 import holypresenter.org.platform.layout.DefaultLayoutService
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
@@ -29,7 +31,8 @@ import holypresenter.org.platform.path.PathService
 import java.io.File
 
 class PlatformRuntime(
-    pathService: PathService = DesktopPathService()
+    pathService: PathService = DesktopPathService(),
+    onExit: () -> Unit = {}
 ) {
     private val pathService =
         pathService.also { service ->
@@ -44,6 +47,9 @@ class PlatformRuntime(
         DefaultVideoPlaybackService()
 
     private val audioPlaybackService = VlcAudioPlaybackService()
+
+    private val applicationLifecycleService =
+        DesktopApplicationLifecycleService(onExit)
 
     private val projectionService =
         DefaultProjectionService(
@@ -145,6 +151,11 @@ class PlatformRuntime(
     fun canDeleteModule(moduleId: String): Boolean = moduleId !in builtinModuleIds && pluginLoader.hasArchive(moduleId)
 
     private fun registerServices() {
+        serviceRegistry.register(
+            ApplicationLifecycleService::class,
+            applicationLifecycleService
+        )
+
         serviceRegistry.register(
             PlannerItemHandlerRegistry::class,
             plannerItemHandlerRegistry
