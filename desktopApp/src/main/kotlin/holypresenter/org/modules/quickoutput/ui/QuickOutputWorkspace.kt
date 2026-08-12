@@ -72,11 +72,65 @@ fun QuickOutputWorkspace(context: ModuleContext) {
 
 private fun formatTime(value: Long): String { val seconds = value / 1000; return "%02d:%02d".format(seconds / 60, seconds % 60) }
 
-private fun quickContent(text: String, path: String?, type: PresentationBackgroundType) = ProjectionContent.Slide(
-    Presentation("quick-output", PresentationMetadata("Быстрый вывод"), PresentationTheme(PresentationBackground(type, path, if (type == PresentationBackgroundType.COLOR) 0xFF000000 else null), PresentationTextStyle(fontSize = 64, textColor = 0xFFFFFFFF, bold = true), PresentationOverlay(enabled = type != PresentationBackgroundType.COLOR)), listOf(PresentationSlide("quick-output-slide", listOf(TextElement("quick-output-text", SlotId("main"), text))))), 0
-)
+private fun quickContent(
+    text: String,
+    path: String?,
+    type: PresentationBackgroundType
+): ProjectionContent.Slide =
+    ProjectionContent.Slide(
+        presentation =
+            Presentation(
+                id = "quick-output",
+                metadata =
+                    PresentationMetadata(
+                        title = "Быстрый вывод"
+                    ),
+                theme =
+                    PresentationTheme(
+                        background =
+                            PresentationBackground(
+                                type = type,
+                                path = path,
+                                color =
+                                    if (type == PresentationBackgroundType.COLOR) {
+                                        0xFF000000
+                                    } else {
+                                        null
+                                    }
+                            ),
+                        textStyle =
+                            PresentationTextStyle(
+                                fontSize = 64,
+                                textColor = 0xFFFFFFFF,
+                                bold = true
+                            ),
+                        overlay =
+                            PresentationOverlay(
+                                enabled =
+                                    type !=
+                                            PresentationBackgroundType.COLOR
+                            )
+                    ),
+                slides =
+                    listOf(
+                        PresentationSlide(
+                            id = "quick-output-slide",
+                            elements =
+                                listOf(
+                                    TextElement(
+                                        id = "quick-output-text",
+                                        slot = SlotId("main"),
+                                        text = text
+                                    )
+                                )
+                        )
+                    )
+            ),
+        slideIndex = 0
+    )
 
-private fun choose(title: String, vararg extensions: String): String? = JFileChooser().run {
+private fun choose(title: String, vararg extensions: String): String? =
+    JFileChooser().run {
     dialogTitle = title; isAcceptAllFileFilterUsed = false; fileFilter = FileNameExtensionFilter(title, *extensions)
     if (showOpenDialog(null) == JFileChooser.APPROVE_OPTION) selectedFile.absolutePath else null
 }

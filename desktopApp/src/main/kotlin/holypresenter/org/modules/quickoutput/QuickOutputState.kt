@@ -8,7 +8,42 @@ import java.util.Base64
 
 internal data class QuickOutputState(val text: String, val mediaPath: String?, val mediaType: PresentationBackgroundType, val audioPath: String?) {
     fun toProjectionContent() = ProjectionContent.Slide(
-        Presentation("quick-output", PresentationMetadata("Быстрый вывод"), PresentationTheme(PresentationBackground(mediaType, mediaPath, if (mediaType == PresentationBackgroundType.COLOR) 0xFF000000 else null), PresentationTextStyle(fontSize = 64, textColor = 0xFFFFFFFF, bold = true), PresentationOverlay(mediaType != PresentationBackgroundType.COLOR)), listOf(PresentationSlide("quick-output-slide", listOf(TextElement("quick-output-text", SlotId("main"), text))))), 0
+        presentation = Presentation(
+            id = "quick-output",
+            metadata = PresentationMetadata("Быстрый вывод"),
+            theme = PresentationTheme(
+                background = PresentationBackground(
+                    type = mediaType,
+                    path = mediaPath,
+                    color = if (mediaType == PresentationBackgroundType.COLOR) {
+                        0xFF000000
+                    } else {
+                        null
+                    }
+                ),
+                textStyle = PresentationTextStyle(
+                    fontSize = 64,
+                    textColor = 0xFFFFFFFF,
+                    bold = true
+                ),
+                overlay = PresentationOverlay(
+                    enabled = mediaType != PresentationBackgroundType.COLOR
+                )
+            ),
+            slides = listOf(
+                PresentationSlide(
+                    id = "quick-output-slide",
+                    elements = listOf(
+                        TextElement(
+                            id = "quick-output-text",
+                            slot = SlotId("main"),
+                            text = text
+                        )
+                    )
+                )
+            )
+        ),
+        slideIndex = 0
     )
 }
 
