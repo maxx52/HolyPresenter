@@ -28,9 +28,9 @@ class VlcAudioPlaybackService : AudioPlaybackService {
         runCatching {
             // Явно включаем звук: настройки VLC могли остаться выключенными после видео.
             mediaPlayer.audio().isMute = false
-            mediaPlayer.audio().volume = 100
+            mediaPlayer.audio().setVolume(100)
             mediaPlayer.media().play(
-                file.toURI().toString(),
+                file.absolutePath,
                 ":no-video",
                 ":no-video-title-show"
             )
