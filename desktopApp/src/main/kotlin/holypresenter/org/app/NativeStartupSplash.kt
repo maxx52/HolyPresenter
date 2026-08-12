@@ -13,7 +13,7 @@ import javax.swing.JWindow
 
 internal class NativeStartupSplash private constructor() : JWindow() {
     private val artwork: BufferedImage = requireNotNull(
-        NativeStartupSplash::class.java.getResourceAsStream("/holypresenter-splash.png")
+        NativeStartupSplash::class.java.getResourceAsStream("/holypresenter-splash.jpg")
     ) { "Не найден ресурс заставки HolyPresenter" }.use(ImageIO::read)
 
     init {
