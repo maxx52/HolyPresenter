@@ -1,6 +1,5 @@
 package holypresenter.org.app
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -12,6 +11,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.rememberWindowState
 import holypresenter.org.app.ui.MainWindow
+import holypresenter.org.app.ui.HolyTheme
 import holypresenter.org.platform.core.PlatformRuntime
 import holypresenter.org.platform.logging.StartupLog
 import kotlinx.coroutines.Dispatchers
@@ -72,7 +72,7 @@ fun HolyPresenterApp(
             onCloseRequest = onExit,
             title = "HolyPresenter",
         ) {
-            MaterialTheme {
+            HolyTheme {
                 androidx.compose.material3.Text("Ошибка запуска: ${currentStartup.message}")
             }
         }
@@ -114,7 +114,7 @@ private fun MainApplicationWindow(
             StartupLog.info("Main window displayed")
         }
 
-        MaterialTheme {
+        HolyTheme {
             MainWindow(
                 modules = platform.moduleRegistry.modules,
                 onDisableModule = platform::disableModule,
