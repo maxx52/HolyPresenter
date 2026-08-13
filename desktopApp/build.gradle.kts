@@ -122,6 +122,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.tracing.desktop)
     implementation(libs.vlcj)
+    implementation("net.java.dev.jna:jna:5.18.1")
+    implementation("net.java.dev.jna:jna-platform:5.18.1")
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.junit)
 }

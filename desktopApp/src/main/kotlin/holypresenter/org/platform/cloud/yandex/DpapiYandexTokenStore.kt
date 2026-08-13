@@ -1,37 +1,80 @@
 package holypresenter.org.platform.cloud.yandex
 
+import com.sun.jna.platform.win32.Crypt32Util
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.util.Base64
+
+internal interface TokenProtector {
+    fun protect(value: ByteArray): ByteArray
+    fun unprotect(value: ByteArray): ByteArray
+}
+
+private object WindowsDpapiTokenProtector : TokenProtector {
+    override fun protect(value: ByteArray): ByteArray =
+        Crypt32Util.cryptProtectData(value)
+
+    override fun unprotect(value: ByteArray): ByteArray =
+        Crypt32Util.cryptUnprotectData(value)
+}
 
 /** Stores OAuth credentials encrypted for the current Windows user via DPAPI. */
-class DpapiYandexTokenStore(
-    applicationHome: File
+class DpapiYandexTokenStore private constructor(
+    applicationHome: File,
+    private val protector: TokenProtector,
+    private val windowsHost: () -> Boolean
 ) {
+    constructor(applicationHome: File) : this(
+        applicationHome = applicationHome,
+        protector = WindowsDpapiTokenProtector,
+        windowsHost = ::isWindowsHost
+    )
+
+    internal constructor(
+        applicationHome: File,
+        protector: TokenProtector
+    ) : this(
+        applicationHome = applicationHome,
+        protector = protector,
+        windowsHost = { true }
+    )
+
     private val directory = File(applicationHome, "cloud")
     private val tokenFile = File(directory, "yandex-token.dpapi")
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
     fun save(token: YandexOAuthToken) {
-        check(isWindows()) {
+        check(windowsHost()) {
             "Защищённое хранение токена Яндекс Диска пока поддерживается только в Windows"
         }
         directory.mkdirs()
-        val protectedValue = invokePowerShell(
-            PROTECT_SCRIPT,
-            json.encodeToString(token)
-        )
-        tokenFile.writeText(protectedValue, Charsets.US_ASCII)
+        val plainBytes = json.encodeToString(token).toByteArray(Charsets.UTF_8)
+        try {
+            val protectedValue = Base64.getEncoder().encodeToString(
+                protector.protect(plainBytes)
+            )
+            tokenFile.writeText(protectedValue, Charsets.US_ASCII)
+        } finally {
+            plainBytes.fill(0)
+        }
     }
 
     fun load(): YandexOAuthToken? {
-        if (!tokenFile.isFile || !isWindows()) return null
+        if (!tokenFile.isFile || !windowsHost()) return null
         return runCatching {
-            val plainJson = invokePowerShell(
-                UNPROTECT_SCRIPT,
+            val protectedBytes = Base64.getDecoder().decode(
                 tokenFile.readText(Charsets.US_ASCII).trim()
             )
-            json.decodeFromString<YandexOAuthToken>(plainJson)
+            val plainBytes = protector.unprotect(protectedBytes)
+            try {
+                json.decodeFromString<YandexOAuthToken>(
+                    plainBytes.toString(Charsets.UTF_8)
+                )
+            } finally {
+                plainBytes.fill(0)
+                protectedBytes.fill(0)
+            }
         }.getOrNull()
     }
 
@@ -39,55 +82,8 @@ class DpapiYandexTokenStore(
         if (tokenFile.exists()) tokenFile.delete()
     }
 
-    private fun invokePowerShell(script: String, input: String): String {
-        val process = ProcessBuilder(
-            "powershell.exe",
-            "-NoProfile",
-            "-NonInteractive",
-            "-WindowStyle",
-            "Hidden",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-Command",
-            script
-        ).redirectErrorStream(false).start()
-
-        process.outputStream.bufferedWriter(Charsets.UTF_8).use { writer ->
-            writer.write(input)
-        }
-        val result = process.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        val error = process.errorStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        val exitCode = process.waitFor()
-        check(exitCode == 0) {
-            "Windows не смог защитить данные авторизации: ${error.trim().ifBlank { "код $exitCode" }}"
-        }
-        return result.trim()
-    }
-
-    private fun isWindows(): Boolean =
-        System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
-
     private companion object {
-        val PROTECT_SCRIPT = """
-            ${'$'}value = [Console]::In.ReadToEnd()
-            ${'$'}bytes = [Text.Encoding]::UTF8.GetBytes(${'$'}value)
-            ${'$'}protected = [Security.Cryptography.ProtectedData]::Protect(
-                ${'$'}bytes,
-                ${'$'}null,
-                [Security.Cryptography.DataProtectionScope]::CurrentUser
-            )
-            [Console]::Out.Write([Convert]::ToBase64String(${'$'}protected))
-        """.trimIndent()
-
-        val UNPROTECT_SCRIPT = """
-            ${'$'}value = [Console]::In.ReadToEnd().Trim()
-            ${'$'}protected = [Convert]::FromBase64String(${'$'}value)
-            ${'$'}bytes = [Security.Cryptography.ProtectedData]::Unprotect(
-                ${'$'}protected,
-                ${'$'}null,
-                [Security.Cryptography.DataProtectionScope]::CurrentUser
-            )
-            [Console]::Out.Write([Text.Encoding]::UTF8.GetString(${'$'}bytes))
-        """.trimIndent()
+        fun isWindowsHost(): Boolean =
+            System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
     }
 }
