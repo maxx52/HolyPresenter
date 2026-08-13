@@ -163,7 +163,11 @@ fun CloudBackupWorkspace(
                             ) {
                                 OutlinedTextField(
                                     value = confirmationCode,
-                                    onValueChange = { confirmationCode = it.filter(Char::isDigit).take(12) },
+                                    onValueChange = { value ->
+                                        confirmationCode = value
+                                            .filter(Char::isLetterOrDigit)
+                                            .take(64)
+                                    },
                                     singleLine = true,
                                     label = { Text("Код подтверждения") }
                                 )
@@ -354,4 +358,3 @@ private fun formatRemoteDate(value: String?): String {
 private val REMOTE_DATE_FORMAT = DateTimeFormatter
     .ofPattern("dd.MM.yyyy HH:mm")
     .withZone(ZoneId.systemDefault())
-
