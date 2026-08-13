@@ -66,6 +66,7 @@ fun CloudBackupWorkspace(
         scope.launch {
             busy = true
             error = null
+            message = null
             runCatching { action() }
                 .onFailure { throwable ->
                     error = throwable.message ?: "Неизвестная ошибка"
@@ -185,6 +186,21 @@ fun CloudBackupWorkspace(
                                         }
                                     }
                                 ) { Text("Подтвердить") }
+                            }
+
+                            TextButton(
+                                enabled = !busy,
+                                onClick = {
+                                    confirmationCode = ""
+                                    execute {
+                                        withContext(Dispatchers.IO) {
+                                            cloudService.beginAuthorization()
+                                        }
+                                        message = "В браузере открыт новый код подтверждения"
+                                    }
+                                }
+                            ) {
+                                Text("Получить новый код")
                             }
                         }
                     }

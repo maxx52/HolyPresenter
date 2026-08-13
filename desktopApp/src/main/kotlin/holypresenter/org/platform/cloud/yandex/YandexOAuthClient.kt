@@ -76,7 +76,7 @@ class YandexOAuthClient(
             .build()
         val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
         check(response.statusCode() in 200..299) {
-            "Яндекс не подтвердил авторизацию (${response.statusCode()}): ${safeError(response.body())}"
+            authorizationError(response.statusCode(), response.body())
         }
         val decoded = json.decodeFromString<YandexOAuthToken>(response.body())
         return decoded.copy(obtainedAtEpochMillis = System.currentTimeMillis())
@@ -99,6 +99,18 @@ class YandexOAuthClient(
     }
 
     private fun safeError(body: String): String = body.take(500)
+
+    private fun authorizationError(statusCode: Int, body: String): String = when {
+        body.contains("invalid_grant", ignoreCase = true) &&
+                body.contains("expired", ignoreCase = true) ->
+            "Код подтверждения истёк. Нажмите «Получить новый код» и введите его сразу."
+
+        body.contains("invalid_grant", ignoreCase = true) ->
+            "Код подтверждения недействителен или уже был использован. Получите новый код."
+
+        else ->
+            "Яндекс не подтвердил авторизацию ($statusCode): ${safeError(body)}"
+    }
 
     private fun encoded(value: String): String = URLEncoder.encode(value, Charsets.UTF_8)
 
