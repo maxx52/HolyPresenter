@@ -217,7 +217,7 @@ compose.desktop {
             )
 
             packageName = "HolyPresenter"
-            packageVersion = "1.0.5"
+            packageVersion = "1.0.6"
 
             /*
              * Временно включаем все модули JDK,
@@ -230,10 +230,7 @@ compose.desktop {
                 shortcut = true
                 dirChooser = true
 
-                /*
-                 * Временная диагностическая консоль.
-                 */
-                console = true
+                console = false
             }
             appResourcesRootDir.set(
                 packageResourcesDirectory

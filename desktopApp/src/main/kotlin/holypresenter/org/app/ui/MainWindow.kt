@@ -2,6 +2,8 @@ package holypresenter.org.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +26,8 @@ fun MainWindow(
     canDeleteModule: (String) -> Boolean,
     disabledBuiltinModuleIds: Set<String>,
     onEnableBuiltinModule: (String) -> Boolean,
+    disabledExternalModules: List<HolyModule>,
+    onEnableExternalModule: (String) -> Boolean,
     onImportModule: (File) -> String
 ) {
     var selectedModule by remember {
@@ -98,6 +102,8 @@ fun MainWindow(
                     canDeleteModule = canDeleteModule,
                     disabledBuiltinModuleIds = disabledBuiltinModuleIds,
                     onEnableBuiltinModule = onEnableBuiltinModule,
+                    disabledExternalModules = disabledExternalModules,
+                    onEnableExternalModule = onEnableExternalModule,
                     onImportModule = onImportModule,
                     onShowPanel = dockManager::show
                 )
@@ -226,6 +232,8 @@ private fun ModuleListPanel(
     canDeleteModule: (String) -> Boolean,
     disabledBuiltinModuleIds: Set<String>,
     onEnableBuiltinModule: (String) -> Boolean,
+    disabledExternalModules: List<HolyModule>,
+    onEnableExternalModule: (String) -> Boolean,
     onImportModule: (File) -> String,
     onShowPanel: (String) -> Unit
 ) {
@@ -234,6 +242,7 @@ private fun ModuleListPanel(
         modifier = Modifier
             .width(if (expanded) 240.dp else 72.dp)
             .fillMaxHeight()
+            .verticalScroll(rememberScrollState())
             .padding(12.dp)
     ) {
         Row(
@@ -320,6 +329,23 @@ private fun ModuleListPanel(
             Text("Отключённые встроенные", style = MaterialTheme.typography.titleSmall)
             disabledBuiltinModuleIds.forEach { id ->
                 TextButton(onClick = { onEnableBuiltinModule(id) }) { Text("Включить: $id") }
+            }
+        }
+
+        if (expanded && disabledExternalModules.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "Отключённые модули",
+                style = MaterialTheme.typography.titleSmall
+            )
+            disabledExternalModules.forEach { module ->
+                TextButton(
+                    onClick = {
+                        onEnableExternalModule(module.metadata.id)
+                    }
+                ) {
+                    Text("Включить: ${module.metadata.name}")
+                }
             }
         }
 

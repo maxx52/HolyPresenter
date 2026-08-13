@@ -6,6 +6,7 @@ import holypresenter.org.modules.quickoutput.QuickOutputModule
 import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
 import holypresenter.org.platform.api.module.ModuleContext
+import holypresenter.org.platform.api.module.HolyModule
 import holypresenter.org.platform.api.planner.PlannerItemHandlerRegistry
 import holypresenter.org.platform.api.planner.PlannerService
 import holypresenter.org.platform.api.projection.ProjectionService
@@ -120,6 +121,7 @@ class PlatformRuntime(
     )
     private val builtinModuleIds = builtinModules.keys
     private val disabledModuleIds = ModulePreferences.disabledIds().toMutableSet()
+    private val externalModules = linkedMapOf<String, HolyModule>()
 
     fun disableModule(moduleId: String) {
         moduleRegistry.unregister(moduleId)
@@ -137,6 +139,19 @@ class PlatformRuntime(
 
     fun disabledBuiltinModuleIds(): Set<String> = disabledModuleIds.intersect(builtinModuleIds)
 
+    fun disabledExternalModules(): List<HolyModule> =
+        externalModules.values.filter { module ->
+            module.metadata.id in disabledModuleIds
+        }
+
+    fun enableExternalModule(moduleId: String): Boolean {
+        val module = externalModules[moduleId] ?: return false
+        disabledModuleIds -= moduleId
+        ModulePreferences.setDisabled(disabledModuleIds)
+        moduleRegistry.register(module)
+        return true
+    }
+
     fun importModuleArchive(archive: File): String {
         pluginLoader.importModuleArchive(archive)
         return "Модуль добавлен. Перезапустите HolyPresenter, чтобы включить его."
@@ -145,7 +160,11 @@ class PlatformRuntime(
     fun deleteModule(moduleId: String): Boolean {
         if (moduleId in builtinModuleIds) return false
         disableModule(moduleId)
-        return pluginLoader.deleteModuleArchive(moduleId)
+        val deleted = pluginLoader.deleteModuleArchive(moduleId)
+        if (deleted) {
+            externalModules.remove(moduleId)
+        }
+        return deleted
     }
 
     fun canDeleteModule(moduleId: String): Boolean = moduleId !in builtinModuleIds && pluginLoader.hasArchive(moduleId)
@@ -211,7 +230,8 @@ class PlatformRuntime(
     }
 
     private fun registerExternalModules() {
-        pluginLoader.loadModules(disabledModuleIds).forEach { module ->
+        pluginLoader.loadModules().forEach { module ->
+            externalModules[module.metadata.id] = module
             runCatching {
                 registerIfEnabled(module)
             }.onFailure { error ->
@@ -220,7 +240,7 @@ class PlatformRuntime(
         }
     }
 
-    private fun registerIfEnabled(module: holypresenter.org.platform.api.module.HolyModule) {
+    private fun registerIfEnabled(module: HolyModule) {
         if (module.metadata.id !in disabledModuleIds) moduleRegistry.register(module)
     }
 }

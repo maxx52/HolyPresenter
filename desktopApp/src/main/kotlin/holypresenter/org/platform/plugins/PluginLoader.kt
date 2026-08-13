@@ -24,7 +24,7 @@ class PluginLoader(
         source.copyTo(target, overwrite = true)
         return target
     }
-    fun loadModules(disabledModuleIds: Set<String> = emptySet()): List<HolyModule> {
+    fun loadModules(): List<HolyModule> {
         installedModulesDirectory.mkdirs()
         val directories = listOf(
             bundledModulesDirectory,
@@ -40,9 +40,6 @@ class PluginLoader(
             ?: emptyList()
         }
             .distinctBy { file -> file.absolutePath }
-            .filterNot { file ->
-                file.nameWithoutExtension in disabledModuleIds
-            }
 
         println("[PluginLoader] jars: ${jarFiles.map { it.name }}")
 

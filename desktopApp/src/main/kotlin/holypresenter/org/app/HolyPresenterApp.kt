@@ -122,6 +122,8 @@ private fun MainApplicationWindow(
                 canDeleteModule = platform::canDeleteModule,
                 disabledBuiltinModuleIds = platform.disabledBuiltinModuleIds(),
                 onEnableBuiltinModule = platform::enableBuiltinModule,
+                disabledExternalModules = platform.disabledExternalModules(),
+                onEnableExternalModule = platform::enableExternalModule,
                 onImportModule = platform::importModuleArchive
             )
         }
