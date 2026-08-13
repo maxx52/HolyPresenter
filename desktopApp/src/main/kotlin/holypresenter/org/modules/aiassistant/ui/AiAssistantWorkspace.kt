@@ -45,6 +45,8 @@ import holypresenter.org.modules.aiassistant.AiAssistantPlanState
 import holypresenter.org.modules.aiassistant.AiAssistantPlanStateCodec
 import holypresenter.org.platform.ai.AiAssistantSettings
 import holypresenter.org.platform.ai.AiAssistantStorage
+import holypresenter.org.platform.ai.ComfyUiProvider
+import holypresenter.org.platform.ai.ComfyUiStatus
 import holypresenter.org.platform.ai.OllamaProvider
 import holypresenter.org.platform.ai.OllamaStatus
 import holypresenter.org.platform.ai.OpenAiApiKeyStore
@@ -80,7 +82,8 @@ fun AiAssistantWorkspace(
     context: ModuleContext,
     storage: AiAssistantStorage,
     apiKeyStore: OpenAiApiKeyStore,
-    ollamaProvider: OllamaProvider
+    ollamaProvider: OllamaProvider,
+    comfyUiProvider: ComfyUiProvider
 ) {
     val scope = rememberCoroutineScope()
     val registry = remember(context) { context.services.get(AiProviderRegistry::class) }
@@ -116,6 +119,8 @@ fun AiAssistantWorkspace(
     var ollamaBusy by remember { mutableStateOf(false) }
     var ollamaProgress by remember { mutableStateOf(0) }
     var ollamaProgressMessage by remember { mutableStateOf("") }
+    var comfyUiStatus by remember { mutableStateOf<ComfyUiStatus>(ComfyUiStatus.Checking) }
+    var comfyUiBusy by remember { mutableStateOf(false) }
 
     val providers = registry?.providers(kind).orEmpty()
     val provider = providers.firstOrNull { it.id == settings.providerId }
@@ -129,6 +134,7 @@ fun AiAssistantWorkspace(
     val providerReady = when (provider?.id) {
         "openai" -> keyConfigured
         ollamaProvider.id -> ollamaStatus == OllamaStatus.Ready
+        comfyUiProvider.id -> comfyUiStatus is ComfyUiStatus.Ready
         null -> false
         else -> true
     }
@@ -138,6 +144,7 @@ fun AiAssistantWorkspace(
             storage.saveSettings(initialSettings)
         }
         ollamaStatus = ollamaProvider.status()
+        comfyUiStatus = comfyUiProvider.status()
     }
 
     fun saveSettings(updated: AiAssistantSettings) {
@@ -188,7 +195,7 @@ fun AiAssistantWorkspace(
             Spacer(Modifier.height(4.dp))
             Text("ИИ-помощник", style = MaterialTheme.typography.headlineMedium)
             Text(
-                "Подготовьте текст бесплатно или подключите облачную генерацию изображений и видео. " +
+                "Подготовьте текст и изображения бесплатно или подключите облачную генерацию. " +
                     "Все расходы видны до запуска.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -202,9 +209,12 @@ fun AiAssistantWorkspace(
                 ) {
                     Text("Бесплатный режим", style = MaterialTheme.typography.titleLarge)
                     Text("✓ Готовые офлайн-шаблоны работают сразу на любом компьютере")
-                    Text("✓ Локальная нейросеть Qwen3 работает без оплаты и без API-ключа")
+                    Text("✓ Qwen3 создаёт текст локально без оплаты и API-ключа")
+                    Text("✓ Бесплатные цветные фоны создаются даже на слабом ПК")
+                    Text("✓ ComfyUI создаёт нейросетевые изображения локально")
                     Text(
-                        "Для изображений и видео пока требуется платный облачный провайдер.",
+                        "Для локальной нейрогенерации изображений рекомендуется отдельная видеокарта. " +
+                            "Видео пока создаётся через облачный провайдер.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -340,6 +350,35 @@ fun AiAssistantWorkspace(
                         )
                     }
 
+                    if (provider?.id == comfyUiProvider.id) {
+                        ComfyUiSetupCard(
+                            status = comfyUiStatus,
+                            busy = comfyUiBusy,
+                            onCheck = {
+                                scope.launch {
+                                    comfyUiBusy = true
+                                    comfyUiStatus = ComfyUiStatus.Checking
+                                    comfyUiStatus = comfyUiProvider.status()
+                                    comfyUiBusy = false
+                                }
+                            },
+                            onInstallComfyUi = {
+                                runCatching { openInBrowser(ComfyUiProvider.DOWNLOAD_URL) }
+                                    .onFailure { throwable ->
+                                        error = throwable.message
+                                            ?: "Не удалось открыть страницу загрузки ComfyUI"
+                                    }
+                            },
+                            onInstallModel = {
+                                runCatching { openInBrowser(ComfyUiProvider.INSTALL_GUIDE_URL) }
+                                    .onFailure { throwable ->
+                                        error = throwable.message
+                                            ?: "Не удалось открыть инструкцию ComfyUI"
+                                    }
+                            }
+                        )
+                    }
+
                     PromptPresets(kind) { preset -> prompt = preset }
 
                     OutlinedTextField(
@@ -403,6 +442,11 @@ fun AiAssistantWorkspace(
                             "Запустите Ollama и установите бесплатную модель перед генерацией.",
                             color = MaterialTheme.colorScheme.tertiary
                         )
+                    } else if (provider?.id == comfyUiProvider.id && !providerReady) {
+                        Text(
+                            "Запустите ComfyUI и установите checkpoint-модель перед генерацией.",
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
                     }
                 }
             }
@@ -412,6 +456,7 @@ fun AiAssistantWorkspace(
             AdvancedSettingsCard(
                 expanded = showAdvanced,
                 settings = settings,
+                kind = kind,
                 providerId = provider?.id,
                 enabled = !busy,
                 onExpandedChange = { showAdvanced = it },
@@ -636,6 +681,78 @@ private fun OllamaSetupCard(
     }
 }
 
+@Composable
+private fun ComfyUiSetupCard(
+    status: ComfyUiStatus,
+    busy: Boolean,
+    onCheck: () -> Unit,
+    onInstallComfyUi: () -> Unit,
+    onInstallModel: () -> Unit
+) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                "Бесплатная генерация изображений",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                "ComfyUI создаёт изображения локально, без API-ключа и оплаты. " +
+                    "HolyPresenter подключается только к 127.0.0.1:8188.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            val statusText = when (status) {
+                ComfyUiStatus.Checking -> "Проверяем ComfyUI…"
+                ComfyUiStatus.NotRunning -> "ComfyUI не установлена или не запущена"
+                ComfyUiStatus.ModelMissing -> "ComfyUI запущена, но checkpoint-модель не установлена"
+                is ComfyUiStatus.Ready -> "● ComfyUI готова · ${status.checkpoint}"
+                is ComfyUiStatus.Failed -> status.message
+            }
+            Text(
+                statusText,
+                color = when (status) {
+                    is ComfyUiStatus.Ready -> MaterialTheme.colorScheme.secondary
+                    ComfyUiStatus.NotRunning, is ComfyUiStatus.Failed ->
+                        MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.tertiary
+                }
+            )
+            if (busy) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    CircularProgressIndicator()
+                    Text("Проверяем локальный движок…")
+                }
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (status == ComfyUiStatus.NotRunning) {
+                    OutlinedButton(enabled = !busy, onClick = onInstallComfyUi) {
+                        Text("Скачать ComfyUI")
+                    }
+                }
+                if (status == ComfyUiStatus.ModelMissing) {
+                    Button(enabled = !busy, onClick = onInstallModel) {
+                        Text("Как установить модель")
+                    }
+                }
+                OutlinedButton(enabled = !busy, onClick = onCheck) {
+                    Text("Проверить снова")
+                }
+            }
+            Text(
+                "ComfyUI запускается отдельно и не занимает память, пока выключена. " +
+                    "На ПК без подходящей видеокарты используйте «Бесплатные фоны».",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
 private fun openInBrowser(url: String) {
     check(Desktop.isDesktopSupported()) { "Открытие браузера не поддерживается системой" }
     val desktop = Desktop.getDesktop()
@@ -694,6 +811,7 @@ private fun BudgetCard(
 private fun AdvancedSettingsCard(
     expanded: Boolean,
     settings: AiAssistantSettings,
+    kind: AiGenerationKind,
     providerId: String?,
     enabled: Boolean,
     onExpandedChange: (Boolean) -> Unit,
@@ -725,45 +843,57 @@ private fun AdvancedSettingsCard(
 
             if (expanded) {
                 HorizontalDivider()
-                if (providerId == "openai") {
-                    Text("Текстовая модель OpenAI", style = MaterialTheme.typography.titleMedium)
-                    ModelRadio("gpt-5.6-luna", "Luna — минимальная стоимость", settings.textModel, enabled) {
-                        onSettingsChange(settings.copy(textModel = it))
-                    }
-                    ModelRadio("gpt-5.6-terra", "Terra — более сильная", settings.textModel, enabled) {
-                        onSettingsChange(settings.copy(textModel = it))
-                    }
-                    ModelRadio("gpt-5.6-sol", "Sol — максимальные возможности", settings.textModel, enabled) {
-                        onSettingsChange(settings.copy(textModel = it))
-                    }
-                } else {
-                    Text(
-                        "Для бесплатного текстового режима параметры подобраны автоматически.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Text("Качество изображения", style = MaterialTheme.typography.titleMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AiImageQuality.entries.forEach { quality ->
-                        FilterChip(
-                            selected = settings.imageQuality == quality,
-                            enabled = enabled,
-                            onClick = { onSettingsChange(settings.copy(imageQuality = quality)) },
-                            label = { Text(quality.title()) }
+                when (kind) {
+                    AiGenerationKind.TEXT -> if (providerId == "openai") {
+                        Text("Текстовая модель OpenAI", style = MaterialTheme.typography.titleMedium)
+                        ModelRadio("gpt-5.6-luna", "Luna — минимальная стоимость", settings.textModel, enabled) {
+                            onSettingsChange(settings.copy(textModel = it))
+                        }
+                        ModelRadio("gpt-5.6-terra", "Terra — более сильная", settings.textModel, enabled) {
+                            onSettingsChange(settings.copy(textModel = it))
+                        }
+                        ModelRadio("gpt-5.6-sol", "Sol — максимальные возможности", settings.textModel, enabled) {
+                            onSettingsChange(settings.copy(textModel = it))
+                        }
+                    } else {
+                        Text(
+                            "Для бесплатного текстового режима параметры подобраны автоматически.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
 
-                Text("Длительность видео", style = MaterialTheme.typography.titleMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(4, 8, 12).forEach { seconds ->
-                        FilterChip(
-                            selected = settings.videoSeconds == seconds,
-                            enabled = enabled,
-                            onClick = { onSettingsChange(settings.copy(videoSeconds = seconds)) },
-                            label = { Text("$seconds сек.") }
+                    AiGenerationKind.IMAGE -> if (providerId == "openai") {
+                        Text("Качество изображения", style = MaterialTheme.typography.titleMedium)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            AiImageQuality.entries.forEach { quality ->
+                                FilterChip(
+                                    selected = settings.imageQuality == quality,
+                                    enabled = enabled,
+                                    onClick = { onSettingsChange(settings.copy(imageQuality = quality)) },
+                                    label = { Text(quality.title()) }
+                                )
+                            }
+                        }
+                    } else {
+                        Text(
+                            "Для бесплатных изображений выбран безопасный размер, подходящий " +
+                                "для предпросмотра и проектора.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    AiGenerationKind.VIDEO -> {
+                        Text("Длительность видео", style = MaterialTheme.typography.titleMedium)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(4, 8, 12).forEach { seconds ->
+                                FilterChip(
+                                    selected = settings.videoSeconds == seconds,
+                                    enabled = enabled,
+                                    onClick = { onSettingsChange(settings.copy(videoSeconds = seconds)) },
+                                    label = { Text("$seconds сек.") }
+                                )
+                            }
+                        }
                     }
                 }
             }

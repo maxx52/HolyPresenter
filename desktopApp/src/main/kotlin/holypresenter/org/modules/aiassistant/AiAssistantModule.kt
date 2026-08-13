@@ -3,6 +3,8 @@ package holypresenter.org.modules.aiassistant
 import androidx.compose.runtime.Composable
 import holypresenter.org.modules.aiassistant.ui.AiAssistantWorkspace
 import holypresenter.org.platform.ai.AiAssistantStorage
+import holypresenter.org.platform.ai.ComfyUiProvider
+import holypresenter.org.platform.ai.FreeBackgroundProvider
 import holypresenter.org.platform.ai.FreeTemplateAiProvider
 import holypresenter.org.platform.ai.OllamaProvider
 import holypresenter.org.platform.ai.OpenAiApiKeyStore
@@ -19,6 +21,8 @@ class AiAssistantModule(
     private val apiKeyStore: OpenAiApiKeyStore,
     private val freeTemplateProvider: FreeTemplateAiProvider,
     private val ollamaProvider: OllamaProvider,
+    private val freeBackgroundProvider: FreeBackgroundProvider,
+    private val comfyUiProvider: ComfyUiProvider,
     private val openAiProvider: OpenAiProvider
 ) : HolyModule {
     private lateinit var context: ModuleContext
@@ -41,6 +45,8 @@ class AiAssistantModule(
         context.services.get(AiProviderRegistry::class)?.let { registry ->
             registry.register(freeTemplateProvider)
             registry.register(ollamaProvider)
+            registry.register(freeBackgroundProvider)
+            registry.register(comfyUiProvider)
             registry.register(openAiProvider)
         }
         val projection = context.services.get(ProjectionService::class) ?: return
@@ -53,6 +59,8 @@ class AiAssistantModule(
         context.services.get(AiProviderRegistry::class)?.let { registry ->
             registry.unregister(freeTemplateProvider.id)
             registry.unregister(ollamaProvider.id)
+            registry.unregister(freeBackgroundProvider.id)
+            registry.unregister(comfyUiProvider.id)
             registry.unregister(openAiProvider.id)
         }
         context.services.get(PlannerItemHandlerRegistry::class)?.unregister(metadata.id)
@@ -64,7 +72,8 @@ class AiAssistantModule(
             context = context,
             storage = storage,
             apiKeyStore = apiKeyStore,
-            ollamaProvider = ollamaProvider
+            ollamaProvider = ollamaProvider,
+            comfyUiProvider = comfyUiProvider
         )
     }
 }

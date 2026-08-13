@@ -7,7 +7,9 @@ import holypresenter.org.modules.cloudbackup.CloudBackupModule
 import holypresenter.org.modules.aiassistant.AiAssistantModule
 import holypresenter.org.app.AppVersion
 import holypresenter.org.platform.ai.AiAssistantStorage
+import holypresenter.org.platform.ai.ComfyUiProvider
 import holypresenter.org.platform.ai.DefaultAiProviderRegistry
+import holypresenter.org.platform.ai.FreeBackgroundProvider
 import holypresenter.org.platform.ai.FreeTemplateAiProvider
 import holypresenter.org.platform.ai.OllamaProvider
 import holypresenter.org.platform.ai.OpenAiApiKeyStore
@@ -119,6 +121,8 @@ class PlatformRuntime(
     )
     private val freeTemplateAiProvider = FreeTemplateAiProvider()
     private val ollamaProvider = OllamaProvider()
+    private val freeBackgroundProvider = FreeBackgroundProvider(pathService.home)
+    private val comfyUiProvider = ComfyUiProvider(pathService.home)
 
     val moduleRegistry = ModuleRegistry(
         context = ModuleContext(
@@ -171,6 +175,8 @@ class PlatformRuntime(
                 apiKeyStore = openAiApiKeyStore,
                 freeTemplateProvider = freeTemplateAiProvider,
                 ollamaProvider = ollamaProvider,
+                freeBackgroundProvider = freeBackgroundProvider,
+                comfyUiProvider = comfyUiProvider,
                 openAiProvider = openAiProvider
             )
         }
