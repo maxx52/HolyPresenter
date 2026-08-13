@@ -33,6 +33,14 @@ The built-in cloud backup module works offline-first and stores versioned
 setup and security notes are documented in
 [docs/YANDEX_DISK_BACKUP.md](./docs/YANDEX_DISK_BACKUP.md).
 
+### ИИ-помощник
+
+Встроенный ИИ-помощник создаёт текст, изображения и короткие видео через
+персональный API-ключ пользователя. Перед генерацией показывается стоимость,
+действует месячный лимит, а результаты можно сразу вывести на экран или добавить
+в план служения. Подробности описаны в
+[docs/AI_ASSISTANT.md](./docs/AI_ASSISTANT.md).
+
 ---
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…

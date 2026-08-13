@@ -4,7 +4,13 @@ import holypresenter.org.modules.presentationtest.PresentationTestModule
 import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.modules.quickoutput.QuickOutputModule
 import holypresenter.org.modules.cloudbackup.CloudBackupModule
+import holypresenter.org.modules.aiassistant.AiAssistantModule
 import holypresenter.org.app.AppVersion
+import holypresenter.org.platform.ai.AiAssistantStorage
+import holypresenter.org.platform.ai.DefaultAiProviderRegistry
+import holypresenter.org.platform.ai.OpenAiApiKeyStore
+import holypresenter.org.platform.ai.OpenAiProvider
+import holypresenter.org.platform.api.ai.AiProviderRegistry
 import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
 import holypresenter.org.platform.api.module.ModuleContext
@@ -102,6 +108,14 @@ class PlatformRuntime(
         backupService = backupService
     )
 
+    private val aiProviderRegistry = DefaultAiProviderRegistry()
+    private val aiAssistantStorage = AiAssistantStorage(pathService.home)
+    private val openAiApiKeyStore = OpenAiApiKeyStore(pathService.home)
+    private val openAiProvider = OpenAiProvider(
+        apiKeyStore = openAiApiKeyStore,
+        applicationHome = pathService.home
+    )
+
     val moduleRegistry = ModuleRegistry(
         context = ModuleContext(
             commands = commandBus,
@@ -146,7 +160,14 @@ class PlatformRuntime(
         "welcome" to ::WelcomeModule,
         "presentation-test" to ::PresentationTestModule,
         "quick-output" to ::QuickOutputModule,
-        "cloud-backup" to { CloudBackupModule(yandexCloudBackupService) }
+        "cloud-backup" to { CloudBackupModule(yandexCloudBackupService) },
+        "ai-assistant" to {
+            AiAssistantModule(
+                storage = aiAssistantStorage,
+                apiKeyStore = openAiApiKeyStore,
+                openAiProvider = openAiProvider
+            )
+        }
     )
     private val builtinModuleIds = builtinModules.keys
     private val disabledModuleIds = ModulePreferences.disabledIds().toMutableSet()
@@ -231,6 +252,11 @@ class PlatformRuntime(
         serviceRegistry.register(
             ProjectionService::class,
             projectionService
+        )
+
+        serviceRegistry.register(
+            AiProviderRegistry::class,
+            aiProviderRegistry
         )
     }
 
