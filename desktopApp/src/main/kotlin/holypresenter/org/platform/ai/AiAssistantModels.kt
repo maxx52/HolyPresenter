@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AiAssistantSettings(
-    val providerId: String = "openai",
+    val providerId: String = "free-templates",
     val textModel: String = "gpt-5.6-luna",
     val imageModel: String = "gpt-image-2",
     val videoModel: String = "sora-2",

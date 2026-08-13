@@ -30,6 +30,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +45,8 @@ import holypresenter.org.modules.aiassistant.AiAssistantPlanState
 import holypresenter.org.modules.aiassistant.AiAssistantPlanStateCodec
 import holypresenter.org.platform.ai.AiAssistantSettings
 import holypresenter.org.platform.ai.AiAssistantStorage
+import holypresenter.org.platform.ai.OllamaProvider
+import holypresenter.org.platform.ai.OllamaStatus
 import holypresenter.org.platform.ai.OpenAiApiKeyStore
 import holypresenter.org.platform.api.ai.AiCostEstimate
 import holypresenter.org.platform.api.ai.AiGenerationKind
@@ -76,18 +79,29 @@ private const val OPENAI_BILLING_URL =
 fun AiAssistantWorkspace(
     context: ModuleContext,
     storage: AiAssistantStorage,
-    apiKeyStore: OpenAiApiKeyStore
+    apiKeyStore: OpenAiApiKeyStore,
+    ollamaProvider: OllamaProvider
 ) {
     val scope = rememberCoroutineScope()
     val registry = remember(context) { context.services.get(AiProviderRegistry::class) }
     val projection = remember(context) { context.services.get(ProjectionService::class) }
     val planner = remember(context) { context.services.get(PlannerService::class) }
 
-    var settings by remember { mutableStateOf(storage.loadSettings()) }
+    val initialKeyConfigured = remember(apiKeyStore) { apiKeyStore.isConfigured() }
+    val initialSettings = remember(storage, initialKeyConfigured) {
+        storage.loadSettings().let { loaded ->
+            if (loaded.providerId == "openai" && !initialKeyConfigured) {
+                loaded.copy(providerId = "free-templates")
+            } else {
+                loaded
+            }
+        }
+    }
+    var settings by remember { mutableStateOf(initialSettings) }
     var kind by remember { mutableStateOf(AiGenerationKind.TEXT) }
     var prompt by remember { mutableStateOf("") }
     var apiKeyDraft by remember { mutableStateOf("") }
-    var keyConfigured by remember { mutableStateOf(apiKeyStore.isConfigured()) }
+    var keyConfigured by remember { mutableStateOf(initialKeyConfigured) }
     var spentThisMonth by remember { mutableStateOf(storage.spentThisMonth()) }
     var monthlyLimitDraft by remember { mutableStateOf(formatEditable(settings.monthlyLimitUsd)) }
     var showAdvanced by remember { mutableStateOf(false) }
@@ -98,6 +112,10 @@ fun AiAssistantWorkspace(
     var message by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var pendingRequest by remember { mutableStateOf<Pair<AiGenerationRequest, AiCostEstimate>?>(null) }
+    var ollamaStatus by remember { mutableStateOf<OllamaStatus>(OllamaStatus.Checking) }
+    var ollamaBusy by remember { mutableStateOf(false) }
+    var ollamaProgress by remember { mutableStateOf(0) }
+    var ollamaProgressMessage by remember { mutableStateOf("") }
 
     val providers = registry?.providers(kind).orEmpty()
     val provider = providers.firstOrNull { it.id == settings.providerId }
@@ -107,6 +125,19 @@ fun AiAssistantWorkspace(
     }
     val estimate = remember(provider, currentRequest) {
         provider?.let { selected -> runCatching { selected.estimate(currentRequest) } }
+    }
+    val providerReady = when (provider?.id) {
+        "openai" -> keyConfigured
+        ollamaProvider.id -> ollamaStatus == OllamaStatus.Ready
+        null -> false
+        else -> true
+    }
+
+    LaunchedEffect(Unit) {
+        if (initialSettings.providerId == "free-templates") {
+            storage.saveSettings(initialSettings)
+        }
+        ollamaStatus = ollamaProvider.status()
     }
 
     fun saveSettings(updated: AiAssistantSettings) {
@@ -157,9 +188,27 @@ fun AiAssistantWorkspace(
             Spacer(Modifier.height(4.dp))
             Text("ИИ-помощник", style = MaterialTheme.typography.headlineMedium)
             Text(
-                "Быстро подготовьте текст, фон или короткое видео. Все расходы видны до запуска.",
+                "Подготовьте текст бесплатно или подключите облачную генерацию изображений и видео. " +
+                    "Все расходы видны до запуска.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        item {
+            OutlinedCard(modifier = Modifier.fillMaxWidth().widthIn(max = 1_100.dp)) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text("Бесплатный режим", style = MaterialTheme.typography.titleLarge)
+                    Text("✓ Готовые офлайн-шаблоны работают сразу на любом компьютере")
+                    Text("✓ Локальная нейросеть Qwen3 работает без оплаты и без API-ключа")
+                    Text(
+                        "Для изображений и видео пока требуется платный облачный провайдер.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
 
         item {
@@ -248,6 +297,49 @@ fun AiAssistantWorkspace(
                         }
                     }
 
+                    if (provider?.id == ollamaProvider.id) {
+                        OllamaSetupCard(
+                            status = ollamaStatus,
+                            model = ollamaProvider.model,
+                            busy = ollamaBusy,
+                            progress = ollamaProgress,
+                            progressMessage = ollamaProgressMessage,
+                            onCheck = {
+                                scope.launch {
+                                    ollamaBusy = true
+                                    ollamaStatus = OllamaStatus.Checking
+                                    ollamaStatus = ollamaProvider.status()
+                                    ollamaBusy = false
+                                }
+                            },
+                            onInstallOllama = {
+                                runCatching { openInBrowser(OllamaProvider.DOWNLOAD_URL) }
+                                    .onFailure { throwable ->
+                                        error = throwable.message
+                                            ?: "Не удалось открыть страницу загрузки Ollama"
+                                    }
+                            },
+                            onInstallModel = {
+                                scope.launch {
+                                    ollamaBusy = true
+                                    ollamaProgress = 0
+                                    ollamaProgressMessage = "Подключаемся к Ollama…"
+                                    ollamaStatus = ollamaProvider.installModel { percent, text ->
+                                        scope.launch {
+                                            ollamaProgress = percent
+                                            ollamaProgressMessage = text
+                                        }
+                                    }
+                                    ollamaBusy = false
+                                    if (ollamaStatus == OllamaStatus.Ready) {
+                                        message = "Бесплатная модель ${ollamaProvider.model} установлена"
+                                        error = null
+                                    }
+                                }
+                            }
+                        )
+                    }
+
                     PromptPresets(kind) { preset -> prompt = preset }
 
                     OutlinedTextField(
@@ -286,7 +378,7 @@ fun AiAssistantWorkspace(
                     }
 
                     Button(
-                        enabled = !busy && keyConfigured && prompt.isNotBlank() &&
+                        enabled = !busy && providerReady && prompt.isNotBlank() &&
                                 provider != null && estimate?.isSuccess == true,
                         onClick = {
                             val selected = provider ?: return@Button
@@ -301,10 +393,15 @@ fun AiAssistantWorkspace(
                         Text(if (busy) "Создаём…" else "Создать")
                     }
 
-                    if (!keyConfigured) {
+                    if (provider?.id == "openai" && !keyConfigured) {
                         Text(
                             "Для генерации добавьте собственный API-ключ OpenAI.",
                             color = MaterialTheme.colorScheme.error
+                        )
+                    } else if (provider?.id == ollamaProvider.id && !providerReady) {
+                        Text(
+                            "Запустите Ollama и установите бесплатную модель перед генерацией.",
+                            color = MaterialTheme.colorScheme.tertiary
                         )
                     }
                 }
@@ -315,6 +412,7 @@ fun AiAssistantWorkspace(
             AdvancedSettingsCard(
                 expanded = showAdvanced,
                 settings = settings,
+                providerId = provider?.id,
                 enabled = !busy,
                 onExpandedChange = { showAdvanced = it },
                 onSettingsChange =(::saveSettings)
@@ -379,12 +477,16 @@ fun AiAssistantWorkspace(
             onDismissRequest = { if (!busy) pendingRequest = null },
             title = { Text("Подтвердить генерацию") },
             text = {
-                Text(
+                val free = calculated.usd == 0.0
+                Text(if (free) {
+                    "Запрос будет выполнен бесплатно провайдером «${provider?.displayName}». " +
+                        "С вашего счёта ничего не спишется."
+                } else {
                     "Будет использован ваш API-ключ. Предварительная стоимость: " +
-                            "${formatUsd(calculated.usd)}.\n\n" +
-                            "Потрачено в этом месяце: ${formatUsd(spentThisMonth)} из " +
-                            formatUsd(settings.monthlyLimitUsd)
-                )
+                        "${formatUsd(calculated.usd)}.\n\n" +
+                        "Потрачено в этом месяце: ${formatUsd(spentThisMonth)} из " +
+                        formatUsd(settings.monthlyLimitUsd)
+                })
             },
             confirmButton = {
                 Button(
@@ -419,7 +521,7 @@ private fun ApiKeyCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Персональный API-ключ", style = MaterialTheme.typography.titleLarge)
+            Text("OpenAI — необязательно", style = MaterialTheme.typography.titleLarge)
             Text(
                 when {
                     environmentKey -> "● Используется ключ из OPENAI_API_KEY"
@@ -465,6 +567,71 @@ private fun ApiKeyCard(
                     Text("Оплатить API")
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun OllamaSetupCard(
+    status: OllamaStatus,
+    model: String,
+    busy: Boolean,
+    progress: Int,
+    progressMessage: String,
+    onCheck: () -> Unit,
+    onInstallOllama: () -> Unit,
+    onInstallModel: () -> Unit
+) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text("Бесплатная нейросеть на компьютере", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Qwen3 1.7B работает через Ollama без API-ключа и не отправляет текст в облако. " +
+                    "Модель занимает ${OllamaProvider.MODEL_SIZE_LABEL}.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            val statusText = when (status) {
+                OllamaStatus.Checking -> "Проверяем Ollama…"
+                OllamaStatus.NotRunning -> "Ollama не установлена или не запущена"
+                OllamaStatus.ModelMissing -> "Ollama запущена, но модель $model ещё не установлена"
+                OllamaStatus.Ready -> "● Бесплатная модель $model готова к работе"
+                is OllamaStatus.Failed -> status.message
+            }
+            Text(
+                statusText,
+                color = when (status) {
+                    OllamaStatus.Ready -> MaterialTheme.colorScheme.secondary
+                    OllamaStatus.NotRunning, is OllamaStatus.Failed -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.tertiary
+                }
+            )
+            if (busy && progressMessage.isNotBlank()) {
+                Text("$progress% · $progressMessage", style = MaterialTheme.typography.bodySmall)
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (status == OllamaStatus.NotRunning) {
+                    OutlinedButton(enabled = !busy, onClick = onInstallOllama) {
+                        Text("Скачать Ollama")
+                    }
+                }
+                if (status == OllamaStatus.ModelMissing) {
+                    Button(enabled = !busy, onClick = onInstallModel) {
+                        Text("Установить модель")
+                    }
+                }
+                OutlinedButton(enabled = !busy, onClick = onCheck) {
+                    Text("Проверить снова")
+                }
+            }
+            Text(
+                "На очень слабом ПК ответ может появляться медленно. Бесплатные шаблоны " +
+                    "работают быстрее и не требуют установки.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -527,6 +694,7 @@ private fun BudgetCard(
 private fun AdvancedSettingsCard(
     expanded: Boolean,
     settings: AiAssistantSettings,
+    providerId: String?,
     enabled: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     onSettingsChange: (AiAssistantSettings) -> Unit
@@ -557,15 +725,22 @@ private fun AdvancedSettingsCard(
 
             if (expanded) {
                 HorizontalDivider()
-                Text("Текстовая модель", style = MaterialTheme.typography.titleMedium)
-                ModelRadio("gpt-5.6-luna", "Luna — минимальная стоимость", settings.textModel, enabled) {
-                    onSettingsChange(settings.copy(textModel = it))
-                }
-                ModelRadio("gpt-5.6-terra", "Terra — более сильная", settings.textModel, enabled) {
-                    onSettingsChange(settings.copy(textModel = it))
-                }
-                ModelRadio("gpt-5.6-sol", "Sol — максимальные возможности", settings.textModel, enabled) {
-                    onSettingsChange(settings.copy(textModel = it))
+                if (providerId == "openai") {
+                    Text("Текстовая модель OpenAI", style = MaterialTheme.typography.titleMedium)
+                    ModelRadio("gpt-5.6-luna", "Luna — минимальная стоимость", settings.textModel, enabled) {
+                        onSettingsChange(settings.copy(textModel = it))
+                    }
+                    ModelRadio("gpt-5.6-terra", "Terra — более сильная", settings.textModel, enabled) {
+                        onSettingsChange(settings.copy(textModel = it))
+                    }
+                    ModelRadio("gpt-5.6-sol", "Sol — максимальные возможности", settings.textModel, enabled) {
+                        onSettingsChange(settings.copy(textModel = it))
+                    }
+                } else {
+                    Text(
+                        "Для бесплатного текстового режима параметры подобраны автоматически.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
                 Text("Качество изображения", style = MaterialTheme.typography.titleMedium)

@@ -8,6 +8,8 @@ import holypresenter.org.modules.aiassistant.AiAssistantModule
 import holypresenter.org.app.AppVersion
 import holypresenter.org.platform.ai.AiAssistantStorage
 import holypresenter.org.platform.ai.DefaultAiProviderRegistry
+import holypresenter.org.platform.ai.FreeTemplateAiProvider
+import holypresenter.org.platform.ai.OllamaProvider
 import holypresenter.org.platform.ai.OpenAiApiKeyStore
 import holypresenter.org.platform.ai.OpenAiProvider
 import holypresenter.org.platform.api.ai.AiProviderRegistry
@@ -115,6 +117,8 @@ class PlatformRuntime(
         apiKeyStore = openAiApiKeyStore,
         applicationHome = pathService.home
     )
+    private val freeTemplateAiProvider = FreeTemplateAiProvider()
+    private val ollamaProvider = OllamaProvider()
 
     val moduleRegistry = ModuleRegistry(
         context = ModuleContext(
@@ -165,6 +169,8 @@ class PlatformRuntime(
             AiAssistantModule(
                 storage = aiAssistantStorage,
                 apiKeyStore = openAiApiKeyStore,
+                freeTemplateProvider = freeTemplateAiProvider,
+                ollamaProvider = ollamaProvider,
                 openAiProvider = openAiProvider
             )
         }
