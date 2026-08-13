@@ -19,6 +19,7 @@ import holypresenter.org.platform.application.DesktopApplicationLifecycleService
 import holypresenter.org.platform.services.DefaultServiceRegistry
 import holypresenter.org.platform.layout.DefaultLayoutService
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
+import holypresenter.org.platform.logging.StartupLog
 import holypresenter.org.platform.path.DesktopPathService
 import holypresenter.org.platform.planner.DefaultPlannerItemHandlerRegistry
 import holypresenter.org.platform.planner.JsonPlannerRepository
@@ -122,6 +123,10 @@ class PlatformRuntime(
     private val builtinModuleIds = builtinModules.keys
     private val disabledModuleIds = ModulePreferences.disabledIds().toMutableSet()
     private val externalModules = linkedMapOf<String, HolyModule>()
+
+    init {
+        StartupLog.info("Disabled module ids: ${disabledModuleIds.sorted()}")
+    }
 
     fun disableModule(moduleId: String) {
         moduleRegistry.unregister(moduleId)

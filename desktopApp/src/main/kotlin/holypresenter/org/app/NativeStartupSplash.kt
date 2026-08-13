@@ -46,7 +46,7 @@ internal class NativeStartupSplash private constructor() : JWindow() {
                     canvas.drawString("Загрузка HolyPresenter и модулей…", 36, height - 58)
                     canvas.font = Font("Dialog", Font.PLAIN, 13)
                     canvas.color = Color(202, 188, 220)
-                    canvas.drawString("Версия 1.0.6", 36, height - 30)
+                    canvas.drawString("Версия 1.0.7", 36, height - 30)
                 } finally {
                     canvas.dispose()
                 }

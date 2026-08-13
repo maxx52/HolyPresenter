@@ -1,9 +1,9 @@
 package holypresenter.org.platform.plugins
 
 import holypresenter.org.platform.api.module.HolyModule
+import holypresenter.org.platform.logging.StartupLog
 import java.io.File
 import java.net.URLClassLoader
-import java.util.ServiceLoader
 import java.util.jar.JarFile
 
 class PluginLoader(
@@ -30,7 +30,9 @@ class PluginLoader(
             bundledModulesDirectory,
             installedModulesDirectory
         ).distinct()
-        println("[PluginLoader] modules dirs: ${directories.map(File::getAbsolutePath)}")
+        StartupLog.info(
+            "[PluginLoader] modules dirs: ${directories.map(File::getAbsolutePath)}"
+        )
 
         val jarFiles = directories.flatMap { directory ->
             directory.listFiles { file ->
@@ -41,7 +43,7 @@ class PluginLoader(
         }
             .distinctBy { file -> file.absolutePath }
 
-        println("[PluginLoader] jars: ${jarFiles.map { it.name }}")
+        StartupLog.info("[PluginLoader] jars: ${jarFiles.map { it.name }}")
 
         if (jarFiles.isEmpty()) {
             return emptyList()
@@ -54,9 +56,12 @@ class PluginLoader(
          * не может быть отключён или удалён как модуль.
          */
         val moduleJars = jarFiles.filter(::declaresHolyModule)
-        val dependencyJars = jarFiles - moduleJars.toSet()
+        val classLoader = URLClassLoader(
+            jarFiles.map { it.toURI().toURL() }.toTypedArray(),
+            HolyModule::class.java.classLoader
+        )
         val modules = moduleJars.mapNotNull { moduleJar ->
-            loadModule(moduleJar, dependencyJars)
+            loadModule(moduleJar, classLoader)
         }.also { loaded ->
             loaded.forEach { module ->
                 module.archiveFile()?.let { archive ->
@@ -65,39 +70,66 @@ class PluginLoader(
             }
         }
 
-        println("[PluginLoader] loaded modules: ${modules.map { it.metadata.name }}")
+        StartupLog.info(
+            "[PluginLoader] loaded modules: ${modules.map { it.metadata.name }}"
+        )
 
         return modules
     }
 
     /**
-     * Загружаем каждый модуль изолированно: один повреждённый JAR или
-     * отсутствующая зависимость не должны останавливать HolyPresenter.
+     * Каждый провайдер создаётся отдельно, поэтому ошибка одного JAR не
+     * останавливает HolyPresenter. Общий classloader позволяет модулям видеть
+     * поставляемые рядом библиотеки, например platform-ui.
      */
-    private fun loadModule(moduleJar: File, dependencyJars: List<File>): HolyModule? =
-        runCatching {
-            val dependenciesClassLoader = URLClassLoader(
-                dependencyJars.map { it.toURI().toURL() }.toTypedArray(),
-                HolyModule::class.java.classLoader
-            )
-            val moduleClassLoader = URLClassLoader(
-                arrayOf(moduleJar.toURI().toURL()),
-                dependenciesClassLoader
-            )
-            ServiceLoader.load(HolyModule::class.java, moduleClassLoader).firstOrNull()
-        }.onFailure { error ->
-            println(
-                "[PluginLoader] skipped ${moduleJar.name}: " +
-                    (error.message ?: error::class.java.simpleName)
-            )
-        }.getOrNull()
+    private fun loadModule(
+        moduleJar: File,
+        classLoader: ClassLoader
+    ): HolyModule? {
+        val providerClassNames = providerClassNames(moduleJar)
+
+        for (providerClassName in providerClassNames) {
+            val module = runCatching {
+                val providerClass = Class.forName(
+                    providerClassName,
+                    true,
+                    classLoader
+                )
+
+                require(HolyModule::class.java.isAssignableFrom(providerClass)) {
+                    "$providerClassName не реализует HolyModule"
+                }
+
+                providerClass
+                    .getDeclaredConstructor()
+                    .newInstance() as HolyModule
+            }.onFailure { error ->
+                StartupLog.error(
+                    message = "[PluginLoader] failed ${moduleJar.name}, " +
+                        "provider $providerClassName",
+                    throwable = error
+                )
+            }.getOrNull()
+
+            if (module != null) return module
+        }
+
+        StartupLog.warning(
+            "[PluginLoader] skipped ${moduleJar.name}: " +
+                "no loadable HolyModule provider"
+        )
+        return null
+    }
 
     private fun declaresHolyModule(jar: File): Boolean =
+        providerClassNames(jar).isNotEmpty()
+
+    private fun providerClassNames(jar: File): List<String> =
         runCatching {
             JarFile(jar).use { archive ->
                 val descriptor = archive.getEntry(
                     "META-INF/services/${HolyModule::class.java.name}"
-                ) ?: return@use false
+                ) ?: return@use emptyList()
 
                 archive.getInputStream(descriptor)
                     .bufferedReader()
@@ -105,11 +137,19 @@ class PluginLoader(
                     .asSequence()
                     .map(String::trim)
                     .filter { it.isNotEmpty() && !it.startsWith('#') }
-                    .any { providerClass ->
-                        archive.getEntry(providerClass.replace('.', '/') + ".class") != null
+                    .filter { providerClass ->
+                        archive.getEntry(
+                            providerClass.replace('.', '/') + ".class"
+                        ) != null
                     }
+                    .toList()
             }
-        }.getOrDefault(false)
+        }.onFailure { error ->
+            StartupLog.error(
+                message = "[PluginLoader] cannot inspect ${jar.name}",
+                throwable = error
+            )
+        }.getOrDefault(emptyList())
 
     private fun HolyModule.archiveFile(): File? =
         runCatching {

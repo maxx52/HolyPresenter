@@ -217,7 +217,7 @@ compose.desktop {
             )
 
             packageName = "HolyPresenter"
-            packageVersion = "1.0.6"
+            packageVersion = "1.0.7"
 
             /*
              * Временно включаем все модули JDK,
