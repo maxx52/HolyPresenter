@@ -20,8 +20,11 @@ Push-Location ..\HolyPresenter-Modules
 Pop-Location
 
 Test-Path .\desktopApp\modules\marketplace.jar
-.\gradlew.bat :desktopApp:packageReleaseDistribution
+.\gradlew.bat :desktopApp:packageMsi
 ```
+
+Пока совместимость VLCJ с минимизацией ProGuard не подтверждена на чистой
+машине, официальный MSI собирается задачей `packageMsi` без минимизации.
 
 `Test-Path` должен вывести `True`. Иначе Marketplace не попадёт в MSI.
 
