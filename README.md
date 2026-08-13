@@ -26,6 +26,13 @@ Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
 
 Before delivering a build, follow the [release test checklist](./TESTING.md).
 
+### Обновления без переустановки
+
+Встроенный модуль «Обновления» скачивает официальный MSI из GitHub Releases,
+проверяет SHA-256, обновляет установленную программу и запускает её снова.
+Настройки и пользовательские данные сохраняются. Порядок публикации новой
+версии описан в [docs/UPDATES.md](./docs/UPDATES.md).
+
 ### Yandex Disk backups
 
 The built-in cloud backup module works offline-first and stores versioned

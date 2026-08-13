@@ -5,6 +5,7 @@ import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.modules.quickoutput.QuickOutputModule
 import holypresenter.org.modules.cloudbackup.CloudBackupModule
 import holypresenter.org.modules.aiassistant.AiAssistantModule
+import holypresenter.org.modules.update.UpdateModule
 import holypresenter.org.app.AppVersion
 import holypresenter.org.platform.ai.AiAssistantStorage
 import holypresenter.org.platform.ai.ComfyUiProvider
@@ -42,6 +43,7 @@ import holypresenter.org.platform.plugins.PluginLoader
 import holypresenter.org.platform.projection.DefaultProjectionService
 import holypresenter.org.platform.settings.DefaultSettingsService
 import holypresenter.org.platform.settings.repository.JsonSettingsRepository
+import holypresenter.org.platform.update.ApplicationUpdateService
 import holypresenter.org.platform.window.DefaultWindowService
 import holypresenter.org.platform.path.PathService
 import java.io.File
@@ -112,6 +114,12 @@ class PlatformRuntime(
         backupService = backupService
     )
 
+    private val applicationUpdateService = ApplicationUpdateService(
+        applicationHome = pathService.home,
+        currentVersion = AppVersion.VERSION,
+        onExit = onExit
+    )
+
     private val aiProviderRegistry = DefaultAiProviderRegistry()
     private val aiAssistantStorage = AiAssistantStorage(pathService.home)
     private val openAiApiKeyStore = OpenAiApiKeyStore(pathService.home)
@@ -169,6 +177,7 @@ class PlatformRuntime(
         "presentation-test" to ::PresentationTestModule,
         "quick-output" to ::QuickOutputModule,
         "cloud-backup" to { CloudBackupModule(yandexCloudBackupService) },
+        "updates" to { UpdateModule(applicationUpdateService) },
         "ai-assistant" to {
             AiAssistantModule(
                 storage = aiAssistantStorage,

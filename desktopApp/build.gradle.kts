@@ -219,7 +219,7 @@ compose.desktop {
             )
 
             packageName = "HolyPresenter"
-            packageVersion = "1.0.7"
+            packageVersion = "1.0.8"
 
             /*
              * Временно включаем все модули JDK,
@@ -231,6 +231,13 @@ compose.desktop {
                 menuGroup = "HolyPresenter"
                 shortcut = true
                 dirChooser = true
+
+                /*
+                 * Постоянный идентификатор нужен MSI для обновления уже
+                 * установленной HolyPresenter поверх предыдущей версии.
+                 * Его нельзя менять в следующих выпусках.
+                 */
+                upgradeUuid = "42472b9c-e9a3-4bb9-85d4-89a48c55bd07"
 
                 console = false
             }
