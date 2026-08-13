@@ -26,6 +26,13 @@ Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
 
 Before delivering a build, follow the [release test checklist](./TESTING.md).
 
+### Yandex Disk backups
+
+The built-in cloud backup module works offline-first and stores versioned
+`.holybackup` archives in the user's Yandex Disk application folder. OAuth
+setup and security notes are documented in
+[docs/YANDEX_DISK_BACKUP.md](./docs/YANDEX_DISK_BACKUP.md).
+
 ---
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…

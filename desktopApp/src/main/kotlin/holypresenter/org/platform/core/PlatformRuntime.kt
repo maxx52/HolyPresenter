@@ -3,6 +3,8 @@ package holypresenter.org.platform.core
 import holypresenter.org.modules.presentationtest.PresentationTestModule
 import holypresenter.org.modules.welcome.WelcomeModule
 import holypresenter.org.modules.quickoutput.QuickOutputModule
+import holypresenter.org.modules.cloudbackup.CloudBackupModule
+import holypresenter.org.app.AppVersion
 import holypresenter.org.platform.api.commands.CommandBus
 import holypresenter.org.platform.api.events.EventBus
 import holypresenter.org.platform.api.module.ModuleContext
@@ -21,6 +23,8 @@ import holypresenter.org.platform.layout.DefaultLayoutService
 import holypresenter.org.platform.layout.repository.JsonLayoutRepository
 import holypresenter.org.platform.logging.StartupLog
 import holypresenter.org.platform.path.DesktopPathService
+import holypresenter.org.platform.backup.ZipBackupService
+import holypresenter.org.platform.cloud.yandex.YandexCloudBackupService
 import holypresenter.org.platform.planner.DefaultPlannerItemHandlerRegistry
 import holypresenter.org.platform.planner.JsonPlannerRepository
 import holypresenter.org.platform.planner.PersistentPlannerService
@@ -38,6 +42,19 @@ class PlatformRuntime(
 ) {
     private val pathService =
         pathService.also { service ->
+            service.ensureDirectories()
+            ZipBackupService.applyPendingRestoreIfPresent(
+                applicationHome = service.home,
+                applicationVersion = AppVersion.VERSION
+            ).onSuccess { manifest ->
+                if (manifest != null) {
+                    StartupLog.info(
+                        "Applied pending backup created at ${manifest.createdAtEpochMillis}"
+                    )
+                }
+            }.onFailure { error ->
+                StartupLog.error("Pending backup restore failed", error)
+            }
             service.ensureDirectories()
         }
 
@@ -74,6 +91,16 @@ class PlatformRuntime(
                     )
                 )
         )
+
+    private val backupService = ZipBackupService(
+        applicationHome = pathService.home,
+        applicationVersion = AppVersion.VERSION
+    )
+
+    private val yandexCloudBackupService = YandexCloudBackupService(
+        applicationHome = pathService.home,
+        backupService = backupService
+    )
 
     val moduleRegistry = ModuleRegistry(
         context = ModuleContext(
@@ -118,7 +145,8 @@ class PlatformRuntime(
     private val builtinModules = mapOf(
         "welcome" to ::WelcomeModule,
         "presentation-test" to ::PresentationTestModule,
-        "quick-output" to ::QuickOutputModule
+        "quick-output" to ::QuickOutputModule,
+        "cloud-backup" to { CloudBackupModule(yandexCloudBackupService) }
     )
     private val builtinModuleIds = builtinModules.keys
     private val disabledModuleIds = ModulePreferences.disabledIds().toMutableSet()
