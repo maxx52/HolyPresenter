@@ -65,7 +65,12 @@ import java.awt.Desktop
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.io.File
+import java.net.URI
 import java.util.Locale
+
+private const val OPENAI_API_KEYS_URL = "https://platform.openai.com/api-keys"
+private const val OPENAI_BILLING_URL =
+    "https://platform.openai.com/settings/organization/billing/overview"
 
 @Composable
 fun AiAssistantWorkspace(
@@ -180,6 +185,18 @@ fun AiAssistantWorkspace(
                     apiKeyStore.clear()
                     keyConfigured = apiKeyStore.isConfigured()
                     message = "Сохранённый API-ключ удалён"
+                },
+                onOpenApiKeys = {
+                    runCatching { openInBrowser(OPENAI_API_KEYS_URL) }
+                        .onFailure { throwable ->
+                            error = throwable.message ?: "Не удалось открыть страницу API-ключей"
+                        }
+                },
+                onOpenBilling = {
+                    runCatching { openInBrowser(OPENAI_BILLING_URL) }
+                        .onFailure { throwable ->
+                            error = throwable.message ?: "Не удалось открыть страницу оплаты API"
+                        }
                 }
             )
         }
@@ -393,7 +410,9 @@ private fun ApiKeyCard(
     enabled: Boolean,
     onDraftChange: (String) -> Unit,
     onSave: () -> Unit,
-    onClear: () -> Unit
+    onClear: () -> Unit,
+    onOpenApiKeys: () -> Unit,
+    onOpenBilling: () -> Unit
 ) {
     OutlinedCard(modifier = Modifier.fillMaxWidth().widthIn(max = 1_100.dp)) {
         Column(
@@ -432,8 +451,31 @@ private fun ApiKeyCard(
                     onClick = onClear
                 ) { Text("Удалить ключ") }
             }
+            HorizontalDivider()
+            Text(
+                "Ключ создаётся в аккаунте OpenAI. Оплата API не входит в подписку ChatGPT " +
+                    "Plus и настраивается отдельно.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(enabled = enabled, onClick = onOpenApiKeys) {
+                    Text("Получить API-ключ")
+                }
+                OutlinedButton(enabled = enabled, onClick = onOpenBilling) {
+                    Text("Оплатить API")
+                }
+            }
         }
     }
+}
+
+private fun openInBrowser(url: String) {
+    check(Desktop.isDesktopSupported()) { "Открытие браузера не поддерживается системой" }
+    val desktop = Desktop.getDesktop()
+    check(desktop.isSupported(Desktop.Action.BROWSE)) {
+        "Открытие ссылок не поддерживается системой"
+    }
+    desktop.browse(URI.create(url))
 }
 
 @Composable

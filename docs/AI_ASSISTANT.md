@@ -30,6 +30,13 @@
 
 Ключ нельзя добавлять в исходный код, JAR, MSI или журнал приложения.
 
+В карточке персонального ключа доступны официальные страницы OpenAI:
+
+- [получить API-ключ](https://platform.openai.com/api-keys);
+- [настроить оплату API](https://platform.openai.com/settings/organization/billing/overview).
+
+Подписка ChatGPT Plus и использование API оплачиваются отдельно.
+
 ## Расширение провайдерами
 
 `AiProvider` и `AiProviderRegistry` находятся в `platform-api`. Внешний модуль
