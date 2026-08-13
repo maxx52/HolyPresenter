@@ -56,11 +56,13 @@ fun UpdateWorkspace(updateService: ApplicationUpdateService) {
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Checking) }
 
-    fun check() {
+    fun check(forceRefresh: Boolean = false) {
         state = UpdateUiState.Checking
         scope.launch {
             state = runCatching {
-                withContext(Dispatchers.IO) { updateService.checkForUpdates() }
+                withContext(Dispatchers.IO) {
+                    updateService.checkForUpdates(forceRefresh)
+                }
             }.fold(
                 onSuccess = { result ->
                     when (result) {
@@ -104,7 +106,10 @@ fun UpdateWorkspace(updateService: ApplicationUpdateService) {
                 UpdateUiState.Checking -> LoadingCard("Проверяем официальный выпуск на GitHub…")
                 is UpdateUiState.Downloading -> LoadingCard("Скачиваем и проверяем HolyPresenter ${current.update.version}…")
                 is UpdateUiState.Installing -> LoadingCard("Закрываем программу и запускаем обновление…")
-                is UpdateUiState.Current -> CurrentVersionCard(current.version, ::check)
+                is UpdateUiState.Current -> CurrentVersionCard(
+                    version = current.version,
+                    onCheck = { check(forceRefresh = true) }
+                )
                 is UpdateUiState.Available -> AvailableUpdateCard(
                     update = current.update,
                     onDownload = {
@@ -147,7 +152,7 @@ fun UpdateWorkspace(updateService: ApplicationUpdateService) {
                     onRetry = {
                         val update = current.update
                         if (update == null) {
-                            check()
+                            check(forceRefresh = true)
                         } else {
                             state = UpdateUiState.Available(update)
                         }

@@ -20,13 +20,16 @@ Push-Location ..\HolyPresenter-Modules
 Pop-Location
 
 Test-Path .\desktopApp\modules\marketplace.jar
-.\gradlew.bat :desktopApp:packageMsi
+.\gradlew.bat :desktopApp:prepareUpdateRelease
 ```
 
 Пока совместимость VLCJ с минимизацией ProGuard не подтверждена на чистой
 машине, официальный MSI собирается задачей `packageMsi` без минимизации.
 
-`Test-Path` должен вывести `True`. Иначе Marketplace не попадёт в MSI.
+`Test-Path` должен вывести `True`. Иначе Marketplace не попадёт в MSI. Задача
+`prepareUpdateRelease` создаёт MSI и проверяемый манифест
+`desktopApp\build\update\holypresenter-update.json`; в GitHub Release нужно
+загрузить оба файла.
 
 Проверка `verifyBundledModules` убеждается, что в дистрибутиве есть `bible.jar`,
 `songs.jar`, `marketplace.jar` и `platform-ui-*.jar`, а каждый встроенный JAR

@@ -30,8 +30,8 @@ class ApplicationUpdateServiceTest {
             .joinToString("") { "%02x".format(it) }
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         val baseUrl = "http://127.0.0.1:${server.address.port}"
-        val releaseJson = releaseJson(
-            version = "v1.0.8",
+        val releaseJson = manifestJson(
+            version = "1.0.8",
             assetUrl = "$baseUrl/HolyPresenter-1.0.8.msi",
             size = installerBytes.size.toLong(),
             digest = digest
@@ -72,7 +72,7 @@ class ApplicationUpdateServiceTest {
     }
 
     @Test
-    fun parseLatestRelease_rejectsInstallerWithoutDigest() {
+    fun parseUpdateManifest_rejectsInstallerWithoutDigest() {
         val service = ApplicationUpdateService(
             applicationHome = Files.createTempDirectory("holypresenter-update").toFile(),
             currentVersion = "1.0.7",
@@ -80,11 +80,92 @@ class ApplicationUpdateServiceTest {
             requireSecureUrls = false
         )
         val error = assertFailsWith<IllegalStateException> {
-            service.parseLatestRelease(
-                releaseJson("1.0.8", "http://localhost/update.msi", 10, null)
+            service.parseUpdateManifest(
+                manifestJson("1.0.8", "http://localhost/update.msi", 10, null)
             )
         }
         assertContains(error.message.orEmpty(), "SHA-256")
+    }
+
+    @Test
+    fun checkForUpdates_usesSixHourCacheAndForceRefreshBypassesIt() {
+        val installerBytes = "cached-installer".toByteArray()
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(installerBytes)
+            .joinToString("") { "%02x".format(it) }
+        var requests = 0
+        var now = 1_000_000L
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        val baseUrl = "http://127.0.0.1:${server.address.port}"
+        val payload = manifestJson(
+            version = "1.0.8",
+            assetUrl = "$baseUrl/HolyPresenter-1.0.8.msi",
+            size = installerBytes.size.toLong(),
+            digest = digest
+        )
+        server.createContext("/latest") { exchange ->
+            requests++
+            exchange.sendResponseHeaders(200, payload.toByteArray().size.toLong())
+            exchange.responseBody.use { it.write(payload.toByteArray()) }
+        }
+        server.start()
+        val home = Files.createTempDirectory("holypresenter-update-cache").toFile()
+        try {
+            val service = ApplicationUpdateService(
+                applicationHome = home,
+                currentVersion = "1.0.7",
+                onExit = {},
+                latestReleaseEndpoint = URI.create("$baseUrl/latest"),
+                requireSecureUrls = false,
+                nowEpochMillis = { now }
+            )
+
+            assertIs<UpdateCheckResult.Available>(service.checkForUpdates())
+            assertIs<UpdateCheckResult.Available>(service.checkForUpdates())
+            assertEquals(1, requests)
+
+            assertIs<UpdateCheckResult.Available>(service.checkForUpdates(forceRefresh = true))
+            assertEquals(2, requests)
+
+            now += 6L * 60L * 60L * 1000L
+            assertIs<UpdateCheckResult.Available>(service.checkForUpdates())
+            assertEquals(3, requests)
+        } finally {
+            server.stop(0)
+            home.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun checkForUpdates_treatsMissingManifestAsCurrentVersionAndCachesIt() {
+        var requests = 0
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        server.createContext("/latest") { exchange ->
+            requests++
+            exchange.sendResponseHeaders(404, -1)
+            exchange.close()
+        }
+        server.start()
+        val home = Files.createTempDirectory("holypresenter-update-empty").toFile()
+        try {
+            val service = ApplicationUpdateService(
+                applicationHome = home,
+                currentVersion = "1.0.8",
+                onExit = {},
+                latestReleaseEndpoint = URI.create(
+                    "http://127.0.0.1:${server.address.port}/latest"
+                ),
+                requireSecureUrls = false,
+                nowEpochMillis = { 1_000_000L }
+            )
+
+            assertIs<UpdateCheckResult.UpToDate>(service.checkForUpdates())
+            assertIs<UpdateCheckResult.UpToDate>(service.checkForUpdates())
+            assertEquals(1, requests)
+        } finally {
+            server.stop(0)
+            home.deleteRecursively()
+        }
     }
 
     @Test
@@ -157,27 +238,24 @@ class ApplicationUpdateServiceTest {
         assertContains(script, "finally")
     }
 
-    private fun releaseJson(
+    private fun manifestJson(
         version: String,
         assetUrl: String,
         size: Long,
         digest: String?
     ): String = """
         {
-          "tag_name": "$version",
-          "name": "HolyPresenter $version",
-          "body": "Новая версия",
-          "html_url": "https://github.com/maxx52/HolyPresenter/releases/tag/$version",
-          "published_at": "2026-08-13T12:00:00Z",
-          "draft": false,
-          "prerelease": false,
-          "assets": [
-            {
+          "schemaVersion": 1,
+          "version": "$version",
+          "title": "HolyPresenter $version",
+          "notes": "Новая версия",
+          "releasePageUrl": "https://github.com/maxx52/HolyPresenter/releases/tag/v$version",
+          "publishedAt": "2026-08-13T12:00:00Z",
+          "installer": {
               "name": "HolyPresenter-$version.msi",
-              "browser_download_url": "$assetUrl",
-              "size": $size${digest?.let { ",\n              \"digest\": \"sha256:$it\"" }.orEmpty()}
-            }
-          ]
+              "downloadUrl": "$assetUrl",
+              "sizeBytes": $size${digest?.let { ",\n              \"sha256\": \"$it\"" }.orEmpty()}
+          }
         }
     """.trimIndent()
 }

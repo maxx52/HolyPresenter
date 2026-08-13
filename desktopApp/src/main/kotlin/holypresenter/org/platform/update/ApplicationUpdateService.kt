@@ -2,11 +2,10 @@ package holypresenter.org.platform.update
 
 import holypresenter.org.platform.logging.StartupLog
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.longOrNull
 import java.io.File
 import java.net.URI
@@ -56,33 +55,51 @@ class ApplicationUpdateService(
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build(),
     private val latestReleaseEndpoint: URI = URI.create(LATEST_RELEASE_ENDPOINT),
-    private val requireSecureUrls: Boolean = true
+    private val requireSecureUrls: Boolean = true,
+    private val nowEpochMillis: () -> Long = System::currentTimeMillis
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private val updatesDirectory = File(applicationHome, "updates")
+    private val cachedManifestFile = File(updatesDirectory, "latest-update.json")
+    private val lastCheckFile = File(updatesDirectory, "last-check.txt")
 
-    fun checkForUpdates(): UpdateCheckResult {
+    fun checkForUpdates(forceRefresh: Boolean = false): UpdateCheckResult {
+        if (!forceRefresh && cacheIsFresh()) {
+            return cachedResult()
+        }
+
         val request = HttpRequest.newBuilder(latestReleaseEndpoint)
             .timeout(Duration.ofSeconds(25))
-            .header("Accept", "application/vnd.github+json")
-            .header("X-GitHub-Api-Version", "2026-03-10")
+            .header("Accept", "application/json")
             .header("User-Agent", "HolyPresenter/$currentVersion")
             .GET()
             .build()
-        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(Charsets.UTF_8))
-        check(response.statusCode() in 200..299) {
-            when (response.statusCode()) {
-                404 -> "Для HolyPresenter пока нет опубликованного обновления."
-                403, 429 -> "GitHub временно ограничил проверку обновлений. Повторите позже."
-                else -> "Не удалось проверить обновления: HTTP ${response.statusCode()}."
-            }
-        }
 
-        val update = parseLatestRelease(response.body())
-        return if (VersionNumber.parse(update.version) > VersionNumber.parse(currentVersion)) {
-            UpdateCheckResult.Available(update)
-        } else {
-            UpdateCheckResult.UpToDate(currentVersion)
+        return runCatching {
+            val response = httpClient.send(
+                request,
+                HttpResponse.BodyHandlers.ofString(Charsets.UTF_8)
+            )
+            when (response.statusCode()) {
+                in 200..299 -> {
+                    val update = parseUpdateManifest(response.body())
+                    writeCache(response.body())
+                    resultFor(update)
+                }
+
+                // A repository without an update manifest simply has no update yet.
+                404 -> {
+                    writeCache(null)
+                    UpdateCheckResult.UpToDate(currentVersion)
+                }
+
+                else -> error("Не удалось проверить обновления: HTTP ${response.statusCode()}.")
+            }
+        }.getOrElse { error ->
+            cachedManifestOrNull()?.let(::resultFor) ?: throw IllegalStateException(
+                "Не удалось связаться с сервером обновлений. Проверьте интернет и повторите позже.",
+                error
+            )
         }
     }
 
@@ -207,45 +224,94 @@ class ApplicationUpdateService(
         onExit()
     }
 
-    internal fun parseLatestRelease(payload: String): ApplicationUpdate {
+    internal fun parseUpdateManifest(payload: String): ApplicationUpdate {
         val root = json.parseToJsonElement(payload).jsonObject
-        check(root["draft"]?.jsonPrimitive?.booleanOrNull != true) {
-            "GitHub вернул черновик выпуска вместо опубликованной версии."
+        check(root["schemaVersion"]?.jsonPrimitive?.intOrNull == MANIFEST_SCHEMA_VERSION) {
+            "Версия формата обновления не поддерживается."
         }
-        check(root["prerelease"]?.jsonPrimitive?.booleanOrNull != true) {
-            "Предварительные версии не устанавливаются автоматически."
-        }
-        val tag = root.string("tag_name") ?: error("В выпуске не указана версия.")
-        val version = VersionNumber.parse(tag).display
-        val assets = root["assets"]?.jsonArray ?: error("В выпуске нет файлов.")
-        val installerObject = assets
-            .map { it.jsonObject }
-            .filter { it.string("name")?.endsWith(".msi", ignoreCase = true) == true }
-            .sortedByDescending { it.string("name")?.contains("HolyPresenter", ignoreCase = true) == true }
-            .firstOrNull()
-            ?: error("В выпуске нет MSI-установщика HolyPresenter.")
-        val digest = installerObject.string("digest")
-            ?.takeIf { it.startsWith("sha256:", ignoreCase = true) }
-            ?.substringAfter(':')
-            ?.lowercase()
+        val rawVersion = root.string("version") ?: error("В манифесте не указана версия.")
+        val version = VersionNumber.parse(rawVersion).display
+        val installerObject = root["installer"]?.jsonObject
+            ?: error("В манифесте нет MSI-установщика HolyPresenter.")
+        val digest = installerObject.string("sha256")?.lowercase()
             ?: error("У MSI-установщика нет SHA-256. Обновление заблокировано для безопасности.")
         check(SHA256_REGEX.matches(digest)) { "GitHub вернул неверную SHA-256 установщика." }
 
         return ApplicationUpdate(
             version = version,
-            title = root.string("name")?.takeIf(String::isNotBlank) ?: "HolyPresenter $version",
-            notes = root.string("body").orEmpty().trim(),
-            publishedAt = root.string("published_at"),
-            releasePageUrl = root.string("html_url") ?: error("В выпуске нет ссылки на страницу."),
+            title = root.string("title")?.takeIf(String::isNotBlank) ?: "HolyPresenter $version",
+            notes = root.string("notes").orEmpty().trim(),
+            publishedAt = root.string("publishedAt"),
+            releasePageUrl = root.string("releasePageUrl")
+                ?: error("В манифесте нет ссылки на страницу выпуска."),
             installer = UpdateInstallerAsset(
                 name = installerObject.string("name") ?: error("У установщика нет имени."),
-                downloadUrl = installerObject.string("browser_download_url")
+                downloadUrl = installerObject.string("downloadUrl")
                     ?: error("У установщика нет ссылки для скачивания."),
-                sizeBytes = installerObject["size"]?.jsonPrimitive?.longOrNull
+                sizeBytes = installerObject["sizeBytes"]?.jsonPrimitive?.longOrNull
                     ?: error("У установщика не указан размер."),
                 sha256 = digest
             )
         ).also { validateAsset(it.installer) }
+    }
+
+    private fun resultFor(update: ApplicationUpdate): UpdateCheckResult =
+        if (VersionNumber.parse(update.version) > VersionNumber.parse(currentVersion)) {
+            UpdateCheckResult.Available(update)
+        } else {
+            UpdateCheckResult.UpToDate(currentVersion)
+        }
+
+    private fun cacheIsFresh(): Boolean {
+        val checkedAt = runCatching {
+            lastCheckFile.takeIf(File::isFile)
+                ?.readText(Charsets.UTF_8)
+                ?.trim()
+                ?.toLongOrNull()
+        }.getOrNull()
+            ?: return false
+        val age = nowEpochMillis() - checkedAt
+        return age in 0 until CHECK_INTERVAL_MILLIS
+    }
+
+    private fun cachedResult(): UpdateCheckResult =
+        cachedManifestOrNull()?.let(::resultFor)
+            ?: UpdateCheckResult.UpToDate(currentVersion)
+
+    private fun cachedManifestOrNull(): ApplicationUpdate? =
+        cachedManifestFile.takeIf(File::isFile)?.let { file ->
+            runCatching { parseUpdateManifest(file.readText(Charsets.UTF_8)) }
+                .onFailure { file.delete() }
+                .getOrNull()
+        }
+
+    private fun writeCache(manifest: String?) {
+        updatesDirectory.mkdirs()
+        if (manifest == null) {
+            cachedManifestFile.delete()
+        } else {
+            writeTextAtomically(cachedManifestFile, manifest)
+        }
+        writeTextAtomically(lastCheckFile, nowEpochMillis().toString())
+    }
+
+    private fun writeTextAtomically(destination: File, content: String) {
+        val temporary = File(destination.parentFile, destination.name + ".tmp")
+        temporary.writeText(content, Charsets.UTF_8)
+        try {
+            Files.move(
+                temporary.toPath(),
+                destination.toPath(),
+                StandardCopyOption.REPLACE_EXISTING,
+                StandardCopyOption.ATOMIC_MOVE
+            )
+        } catch (_: AtomicMoveNotSupportedException) {
+            Files.move(
+                temporary.toPath(),
+                destination.toPath(),
+                StandardCopyOption.REPLACE_EXISTING
+            )
+        }
     }
 
     internal fun buildInstallScript(
@@ -327,7 +393,9 @@ class ApplicationUpdateService(
 
     private companion object {
         const val LATEST_RELEASE_ENDPOINT =
-            "https://api.github.com/repos/maxx52/HolyPresenter/releases/latest"
+            "https://github.com/maxx52/HolyPresenter/releases/latest/download/holypresenter-update.json"
+        const val MANIFEST_SCHEMA_VERSION = 1
+        const val CHECK_INTERVAL_MILLIS = 6L * 60L * 60L * 1000L
         const val MAX_INSTALLER_SIZE_BYTES = 2L * 1024L * 1024L * 1024L
         const val MIN_FREE_SPACE_BYTES = 64L * 1024L * 1024L
         val SHA256_REGEX = Regex("[0-9a-fA-F]{64}")

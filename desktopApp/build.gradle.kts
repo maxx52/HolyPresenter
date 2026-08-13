@@ -7,6 +7,8 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskAction
+import java.net.URLEncoder
+import java.security.MessageDigest
 import java.util.jar.JarFile
 
 plugins {
@@ -15,6 +17,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
     kotlin("plugin.serialization") version "2.4.0"
 }
+
+val holyPresenterVersion = "1.0.9"
 
 abstract class VerifyBundledModules : DefaultTask() {
     @get:InputFiles
@@ -219,7 +223,7 @@ compose.desktop {
             )
 
             packageName = "HolyPresenter"
-            packageVersion = "1.0.8"
+            packageVersion = holyPresenterVersion
 
             /*
              * Временно включаем все модули JDK,
@@ -248,6 +252,79 @@ compose.desktop {
         dependsOn(
             "prepareBundledModules"
         )
+    }
+}
+
+tasks.register("prepareUpdateRelease") {
+    group = "distribution"
+    description = "Собирает MSI и манифест для встроенного обновления"
+    dependsOn("packageMsi")
+
+    val manifestFile = layout.buildDirectory.file(
+        "update/holypresenter-update.json"
+    )
+    outputs.file(manifestFile)
+
+    doLast {
+        val msiDirectory = layout.buildDirectory
+            .dir("compose/binaries/main/msi")
+            .get()
+            .asFile
+        val installers = msiDirectory
+            .walkTopDown()
+            .filter { file ->
+                file.isFile &&
+                        file.extension.equals("msi", ignoreCase = true) &&
+                        file.name.contains(holyPresenterVersion)
+            }
+            .toList()
+        if (installers.size != 1) {
+            throw GradleException(
+                "Ожидался один MSI версии $holyPresenterVersion в " +
+                        "${msiDirectory.absolutePath}, найдено: ${installers.size}"
+            )
+        }
+        val installer = installers.single()
+        val digest = MessageDigest.getInstance("SHA-256")
+        installer.inputStream().buffered().use { input ->
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                digest.update(buffer, 0, count)
+            }
+        }
+        val sha256 = digest.digest().joinToString("") { byte ->
+            "%02x".format(byte)
+        }
+        val encodedName = URLEncoder
+            .encode(installer.name, Charsets.UTF_8)
+            .replace("+", "%20")
+        val releaseTag = "v$holyPresenterVersion"
+        val destination = manifestFile.get().asFile
+        destination.parentFile.mkdirs()
+        destination.writeText(
+            """
+            {
+              "schemaVersion": 1,
+              "version": "$holyPresenterVersion",
+              "title": "HolyPresenter $holyPresenterVersion",
+              "notes": "",
+              "releasePageUrl": "https://github.com/maxx52/HolyPresenter/releases/tag/$releaseTag",
+              "installer": {
+                "name": "${installer.name}",
+                "downloadUrl": "https://github.com/maxx52/HolyPresenter/releases/download/$releaseTag/$encodedName",
+                "sizeBytes": ${installer.length()},
+                "sha256": "$sha256"
+              }
+            }
+            """.trimIndent() + "\n",
+            Charsets.UTF_8
+        )
+
+        println("MSI: ${installer.absolutePath}")
+        println("Update manifest: ${destination.absolutePath}")
+        println("Publish both files in GitHub Release $releaseTag")
     }
 }
 
