@@ -53,6 +53,7 @@ class ApplicationUpdateServiceTest {
                 currentVersion = "1.0.7",
                 onExit = {},
                 latestReleaseEndpoint = URI.create("$baseUrl/latest"),
+                yandexPublicFolderUrl = null,
                 requireSecureUrls = false
             )
             val result = assertIs<UpdateCheckResult.Available>(service.checkForUpdates())
@@ -116,6 +117,7 @@ class ApplicationUpdateServiceTest {
                 currentVersion = "1.0.7",
                 onExit = {},
                 latestReleaseEndpoint = URI.create("$baseUrl/latest"),
+                yandexPublicFolderUrl = null,
                 requireSecureUrls = false,
                 nowEpochMillis = { now }
             )
@@ -155,6 +157,7 @@ class ApplicationUpdateServiceTest {
                 latestReleaseEndpoint = URI.create(
                     "http://127.0.0.1:${server.address.port}/latest"
                 ),
+                yandexPublicFolderUrl = null,
                 requireSecureUrls = false,
                 nowEpochMillis = { 1_000_000L }
             )
@@ -162,6 +165,159 @@ class ApplicationUpdateServiceTest {
             assertIs<UpdateCheckResult.UpToDate>(service.checkForUpdates())
             assertIs<UpdateCheckResult.UpToDate>(service.checkForUpdates())
             assertEquals(1, requests)
+        } finally {
+            server.stop(0)
+            home.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun checkForUpdates_prefersYandexDiskAndDownloadsItsInstaller() {
+        val installerBytes = "yandex-installer".toByteArray()
+        val digest = sha256(installerBytes)
+        var githubManifestRequests = 0
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        val baseUrl = "http://127.0.0.1:${server.address.port}"
+        val manifest = manifestJson(
+            version = "1.0.9",
+            assetUrl = "$baseUrl/HolyPresenter-1.0.9.msi",
+            size = installerBytes.size.toLong(),
+            digest = digest
+        )
+        server.createContext("/yandex-download") { exchange ->
+            val href = if (exchange.requestURI.rawQuery.orEmpty().contains("holypresenter-update.json")) {
+                "$baseUrl/yandex-manifest"
+            } else {
+                "$baseUrl/yandex-installer"
+            }
+            val response = "{\"href\":\"$href\"}".toByteArray()
+            exchange.sendResponseHeaders(200, response.size.toLong())
+            exchange.responseBody.use { it.write(response) }
+        }
+        server.createContext("/yandex-manifest") { exchange ->
+            val response = manifest.toByteArray()
+            exchange.sendResponseHeaders(200, response.size.toLong())
+            exchange.responseBody.use { it.write(response) }
+        }
+        server.createContext("/yandex-installer") { exchange ->
+            exchange.sendResponseHeaders(200, installerBytes.size.toLong())
+            exchange.responseBody.use { it.write(installerBytes) }
+        }
+        server.createContext("/github-latest") { exchange ->
+            githubManifestRequests++
+            exchange.sendResponseHeaders(500, -1)
+            exchange.close()
+        }
+        server.start()
+        val home = Files.createTempDirectory("holypresenter-update-yandex").toFile()
+        try {
+            val service = ApplicationUpdateService(
+                applicationHome = home,
+                currentVersion = "1.0.8",
+                onExit = {},
+                latestReleaseEndpoint = URI.create("$baseUrl/github-latest"),
+                yandexPublicFolderUrl = "https://disk.yandex.ru/d/test",
+                yandexPublicDownloadEndpoint = URI.create("$baseUrl/yandex-download"),
+                requireSecureUrls = false
+            )
+
+            val result = assertIs<UpdateCheckResult.Available>(service.checkForUpdates())
+            assertEquals(UpdateDistributionSource.YANDEX_DISK, result.update.installer.source)
+            assertEquals(0, githubManifestRequests)
+            assertTrue(service.download(result.update).readBytes().contentEquals(installerBytes))
+        } finally {
+            server.stop(0)
+            home.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun checkForUpdates_fallsBackToGithubWhenYandexManifestIsInvalid() {
+        val installerBytes = "github-installer".toByteArray()
+        val manifest = manifestJson(
+            version = "1.0.9",
+            assetUrl = "http://localhost/HolyPresenter-1.0.9.msi",
+            size = installerBytes.size.toLong(),
+            digest = sha256(installerBytes)
+        )
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        val baseUrl = "http://127.0.0.1:${server.address.port}"
+        server.createContext("/yandex-download") { exchange ->
+            val response = "{\"href\":\"$baseUrl/invalid-manifest\"}".toByteArray()
+            exchange.sendResponseHeaders(200, response.size.toLong())
+            exchange.responseBody.use { it.write(response) }
+        }
+        server.createContext("/invalid-manifest") { exchange ->
+            val response = "{}".toByteArray()
+            exchange.sendResponseHeaders(200, response.size.toLong())
+            exchange.responseBody.use { it.write(response) }
+        }
+        server.createContext("/github-latest") { exchange ->
+            val response = manifest.toByteArray()
+            exchange.sendResponseHeaders(200, response.size.toLong())
+            exchange.responseBody.use { it.write(response) }
+        }
+        server.start()
+        val home = Files.createTempDirectory("holypresenter-update-fallback").toFile()
+        try {
+            val service = ApplicationUpdateService(
+                applicationHome = home,
+                currentVersion = "1.0.8",
+                onExit = {},
+                latestReleaseEndpoint = URI.create("$baseUrl/github-latest"),
+                yandexPublicFolderUrl = "https://disk.yandex.ru/d/test",
+                yandexPublicDownloadEndpoint = URI.create("$baseUrl/yandex-download"),
+                requireSecureUrls = false
+            )
+
+            val result = assertIs<UpdateCheckResult.Available>(service.checkForUpdates())
+            assertEquals(UpdateDistributionSource.GITHUB, result.update.installer.source)
+        } finally {
+            server.stop(0)
+            home.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun download_fallsBackToGithubWhenYandexInstallerIsMissing() {
+        val installerBytes = "fallback-installer".toByteArray()
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        val baseUrl = "http://127.0.0.1:${server.address.port}"
+        server.createContext("/yandex-download") { exchange ->
+            exchange.sendResponseHeaders(404, -1)
+            exchange.close()
+        }
+        server.createContext("/HolyPresenter-1.0.9.msi") { exchange ->
+            exchange.sendResponseHeaders(200, installerBytes.size.toLong())
+            exchange.responseBody.use { it.write(installerBytes) }
+        }
+        server.start()
+        val home = Files.createTempDirectory("holypresenter-update-download-fallback").toFile()
+        try {
+            val service = ApplicationUpdateService(
+                applicationHome = home,
+                currentVersion = "1.0.8",
+                onExit = {},
+                yandexPublicFolderUrl = "https://disk.yandex.ru/d/test",
+                yandexPublicDownloadEndpoint = URI.create("$baseUrl/yandex-download"),
+                requireSecureUrls = false
+            )
+            val update = ApplicationUpdate(
+                version = "1.0.9",
+                title = "HolyPresenter 1.0.9",
+                notes = "",
+                publishedAt = null,
+                releasePageUrl = "https://github.com/maxx52/HolyPresenter/releases/tag/v1.0.9",
+                installer = UpdateInstallerAsset(
+                    name = "HolyPresenter-1.0.9.msi",
+                    downloadUrl = "$baseUrl/HolyPresenter-1.0.9.msi",
+                    sizeBytes = installerBytes.size.toLong(),
+                    sha256 = sha256(installerBytes),
+                    source = UpdateDistributionSource.YANDEX_DISK
+                )
+            )
+
+            assertTrue(service.download(update).readBytes().contentEquals(installerBytes))
         } finally {
             server.stop(0)
             home.deleteRecursively()
@@ -258,4 +414,8 @@ class ApplicationUpdateServiceTest {
           }
         }
     """.trimIndent()
+
+    private fun sha256(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256")
+        .digest(bytes)
+        .joinToString("") { "%02x".format(it) }
 }

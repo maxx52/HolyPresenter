@@ -9,6 +9,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.longOrNull
 import java.io.File
 import java.net.URI
+import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -31,8 +32,14 @@ data class UpdateInstallerAsset(
     val name: String,
     val downloadUrl: String,
     val sizeBytes: Long,
-    val sha256: String
+    val sha256: String,
+    val source: UpdateDistributionSource = UpdateDistributionSource.GITHUB
 )
+
+enum class UpdateDistributionSource {
+    YANDEX_DISK,
+    GITHUB
+}
 
 sealed interface UpdateCheckResult {
     data class Available(val update: ApplicationUpdate) : UpdateCheckResult
@@ -40,9 +47,9 @@ sealed interface UpdateCheckResult {
 }
 
 /**
- * Downloads verified MSI packages from the official HolyPresenter GitHub release.
+ * Downloads verified MSI packages from the HolyPresenter update mirrors.
  *
- * The installer is never launched until its size and GitHub-provided SHA-256 digest
+ * The installer is never launched until its size and published SHA-256 digest
  * have both been verified. User data is not stored inside Program Files and is
  * therefore untouched by an in-place MSI upgrade.
  */
@@ -55,12 +62,15 @@ class ApplicationUpdateService(
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build(),
     private val latestReleaseEndpoint: URI = URI.create(LATEST_RELEASE_ENDPOINT),
+    private val yandexPublicFolderUrl: String? = YANDEX_PUBLIC_FOLDER_URL,
+    private val yandexPublicDownloadEndpoint: URI = URI.create(YANDEX_PUBLIC_DOWNLOAD_ENDPOINT),
     private val requireSecureUrls: Boolean = true,
     private val nowEpochMillis: () -> Long = System::currentTimeMillis
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private val updatesDirectory = File(applicationHome, "updates")
     private val cachedManifestFile = File(updatesDirectory, "latest-update.json")
+    private val cachedSourceFile = File(updatesDirectory, "latest-update-source.txt")
     private val lastCheckFile = File(updatesDirectory, "last-check.txt")
 
     fun checkForUpdates(forceRefresh: Boolean = false): UpdateCheckResult {
@@ -68,39 +78,38 @@ class ApplicationUpdateService(
             return cachedResult()
         }
 
-        val request = HttpRequest.newBuilder(latestReleaseEndpoint)
-            .timeout(Duration.ofSeconds(25))
-            .header("Accept", "application/json")
-            .header("User-Agent", "HolyPresenter/$currentVersion")
-            .GET()
-            .build()
-
-        return runCatching {
-            val response = httpClient.send(
-                request,
-                HttpResponse.BodyHandlers.ofString(Charsets.UTF_8)
-            )
-            when (response.statusCode()) {
-                in 200..299 -> {
-                    val update = parseUpdateManifest(response.body())
-                    writeCache(response.body())
-                    resultFor(update)
-                }
-
-                // A repository without an update manifest simply has no update yet.
-                404 -> {
-                    writeCache(null)
-                    UpdateCheckResult.UpToDate(currentVersion)
-                }
-
-                else -> error("Не удалось проверить обновления: HTTP ${response.statusCode()}.")
+        val yandexResult = runCatching {
+            fetchYandexManifest()?.let { payload ->
+                payload to parseUpdateManifest(payload, UpdateDistributionSource.YANDEX_DISK)
             }
-        }.getOrElse { error ->
-            cachedManifestOrNull()?.let(::resultFor) ?: throw IllegalStateException(
-                "Не удалось связаться с сервером обновлений. Проверьте интернет и повторите позже.",
-                error
-            )
         }
+        yandexResult.getOrNull()?.let { (payload, update) ->
+            writeCache(payload, UpdateDistributionSource.YANDEX_DISK)
+            return resultFor(update)
+        }
+
+        val githubResult = runCatching {
+            fetchGithubManifest()?.let { payload ->
+                payload to parseUpdateManifest(payload, UpdateDistributionSource.GITHUB)
+            }
+        }
+        githubResult.getOrNull()?.let { (payload, update) ->
+            writeCache(payload, UpdateDistributionSource.GITHUB)
+            return resultFor(update)
+        }
+
+        if (githubResult.isSuccess) {
+            // No manifest in either mirror means there is no published update yet.
+            writeCache(null, null)
+            return UpdateCheckResult.UpToDate(currentVersion)
+        }
+
+        cachedManifestOrNull()?.let { return resultFor(it) }
+        val error = githubResult.exceptionOrNull() ?: yandexResult.exceptionOrNull()
+        throw IllegalStateException(
+            "Не удалось связаться с серверами обновлений. Проверьте интернет и повторите позже.",
+            error
+        )
     }
 
     fun download(
@@ -124,17 +133,58 @@ class ApplicationUpdateService(
             return finalFile
         }
 
+        val candidates = buildList {
+            if (asset.source == UpdateDistributionSource.YANDEX_DISK) {
+                runCatching { resolveYandexPublicDownload("/${asset.name}") }
+                    .onSuccess(::add)
+                    .onFailure {
+                        StartupLog.warning(
+                            "Yandex Disk update download is unavailable; using GitHub fallback: " +
+                                    it.message.orEmpty()
+                        )
+                    }
+            }
+            add(URI.create(asset.downloadUrl))
+        }.distinctBy(URI::toString)
+
+        var lastError: Throwable? = null
+        for (downloadUri in candidates) {
+            try {
+                downloadAndVerify(asset, downloadUri, finalFile, onProgress)
+                return finalFile
+            } catch (error: Throwable) {
+                lastError = error
+                StartupLog.warning(
+                    "Update download failed from ${downloadUri.host}; trying fallback: " +
+                            error.message.orEmpty()
+                )
+            }
+        }
+        if (candidates.size == 1) throw checkNotNull(lastError)
+        throw IllegalStateException(
+            "Не удалось скачать обновление ни с Яндекс Диска, ни с GitHub.",
+            lastError
+        )
+    }
+
+    private fun downloadAndVerify(
+        asset: UpdateInstallerAsset,
+        downloadUri: URI,
+        finalFile: File,
+        onProgress: (downloadedBytes: Long, totalBytes: Long) -> Unit
+    ) {
         val partialFile = File(updatesDirectory, finalFile.name + ".part")
         partialFile.delete()
-        val request = HttpRequest.newBuilder(URI.create(asset.downloadUrl))
+        val request = HttpRequest.newBuilder(downloadUri)
             .timeout(Duration.ofMinutes(15))
             .header("Accept", "application/octet-stream")
             .header("User-Agent", "HolyPresenter/$currentVersion")
             .GET()
             .build()
         val response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream())
-        check(response.statusCode() in 200..299) {
-            "Не удалось скачать обновление: HTTP ${response.statusCode()}."
+        if (response.statusCode() !in 200..299) {
+            response.body().close()
+            error("Не удалось скачать обновление: HTTP ${response.statusCode()}.")
         }
 
         val digest = MessageDigest.getInstance("SHA-256")
@@ -181,7 +231,6 @@ class ApplicationUpdateService(
             partialFile.delete()
             throw error
         }
-        return finalFile
     }
 
     /** Starts a hidden helper, closes HolyPresenter, installs the MSI and reopens the app. */
@@ -224,7 +273,10 @@ class ApplicationUpdateService(
         onExit()
     }
 
-    internal fun parseUpdateManifest(payload: String): ApplicationUpdate {
+    internal fun parseUpdateManifest(
+        payload: String,
+        source: UpdateDistributionSource = UpdateDistributionSource.GITHUB
+    ): ApplicationUpdate {
         val root = json.parseToJsonElement(payload).jsonObject
         check(root["schemaVersion"]?.jsonPrimitive?.intOrNull == MANIFEST_SCHEMA_VERSION) {
             "Версия формата обновления не поддерживается."
@@ -235,7 +287,7 @@ class ApplicationUpdateService(
             ?: error("В манифесте нет MSI-установщика HolyPresenter.")
         val digest = installerObject.string("sha256")?.lowercase()
             ?: error("У MSI-установщика нет SHA-256. Обновление заблокировано для безопасности.")
-        check(SHA256_REGEX.matches(digest)) { "GitHub вернул неверную SHA-256 установщика." }
+        check(SHA256_REGEX.matches(digest)) { "В манифесте указана неверная SHA-256 установщика." }
 
         return ApplicationUpdate(
             version = version,
@@ -250,9 +302,67 @@ class ApplicationUpdateService(
                     ?: error("У установщика нет ссылки для скачивания."),
                 sizeBytes = installerObject["sizeBytes"]?.jsonPrimitive?.longOrNull
                     ?: error("У установщика не указан размер."),
-                sha256 = digest
+                sha256 = digest,
+                source = source
             )
         ).also { validateAsset(it.installer) }
+    }
+
+    private fun fetchYandexManifest(): String? {
+        if (yandexPublicFolderUrl.isNullOrBlank()) return null
+        val downloadUri = resolveYandexPublicDownload("/$UPDATE_MANIFEST_NAME")
+        return downloadText(downloadUri, missingIsNull = true)
+    }
+
+    private fun fetchGithubManifest(): String? =
+        downloadText(latestReleaseEndpoint, missingIsNull = true)
+
+    private fun downloadText(uri: URI, missingIsNull: Boolean): String? {
+        val request = HttpRequest.newBuilder(uri)
+            .timeout(Duration.ofSeconds(25))
+            .header("Accept", "application/json")
+            .header("User-Agent", "HolyPresenter/$currentVersion")
+            .GET()
+            .build()
+        val response = httpClient.send(
+            request,
+            HttpResponse.BodyHandlers.ofString(Charsets.UTF_8)
+        )
+        if (missingIsNull && response.statusCode() == 404) return null
+        check(response.statusCode() in 200..299) {
+            "Сервер обновлений вернул HTTP ${response.statusCode()}."
+        }
+        check(response.body().toByteArray(Charsets.UTF_8).size <= MAX_MANIFEST_SIZE_BYTES) {
+            "Манифест обновления слишком большой."
+        }
+        return response.body()
+    }
+
+    private fun resolveYandexPublicDownload(path: String): URI {
+        val publicFolder = yandexPublicFolderUrl
+            ?.takeIf(String::isNotBlank)
+            ?: error("Публичная папка обновлений Яндекс Диска не настроена.")
+        val separator = if (yandexPublicDownloadEndpoint.rawQuery == null) "?" else "&"
+        val requestUri = URI.create(
+            yandexPublicDownloadEndpoint.toString() + separator +
+                    "public_key=${encoded(publicFolder)}&path=${encoded(path)}"
+        )
+        val request = HttpRequest.newBuilder(requestUri)
+            .timeout(Duration.ofSeconds(25))
+            .header("Accept", "application/json")
+            .header("User-Agent", "HolyPresenter/$currentVersion")
+            .GET()
+            .build()
+        val response = httpClient.send(
+            request,
+            HttpResponse.BodyHandlers.ofString(Charsets.UTF_8)
+        )
+        check(response.statusCode() in 200..299) {
+            "Яндекс Диск не нашёл файл обновления ($path, HTTP ${response.statusCode()})."
+        }
+        val href = json.parseToJsonElement(response.body()).jsonObject.string("href")
+            ?: error("Яндекс Диск не вернул ссылку для скачивания $path.")
+        return URI.create(href).also(::validateYandexDownloadUri)
     }
 
     private fun resultFor(update: ApplicationUpdate): UpdateCheckResult =
@@ -280,17 +390,32 @@ class ApplicationUpdateService(
 
     private fun cachedManifestOrNull(): ApplicationUpdate? =
         cachedManifestFile.takeIf(File::isFile)?.let { file ->
-            runCatching { parseUpdateManifest(file.readText(Charsets.UTF_8)) }
+            val source = runCatching {
+                UpdateDistributionSource.valueOf(
+                    cachedSourceFile.readText(Charsets.UTF_8).trim()
+                )
+            }.getOrDefault(UpdateDistributionSource.GITHUB)
+            runCatching {
+                parseUpdateManifest(file.readText(Charsets.UTF_8), source)
+            }
                 .onFailure { file.delete() }
                 .getOrNull()
         }
 
-    private fun writeCache(manifest: String?) {
+    private fun writeCache(
+        manifest: String?,
+        source: UpdateDistributionSource?
+    ) {
         updatesDirectory.mkdirs()
         if (manifest == null) {
             cachedManifestFile.delete()
+            cachedSourceFile.delete()
         } else {
             writeTextAtomically(cachedManifestFile, manifest)
+            writeTextAtomically(
+                cachedSourceFile,
+                checkNotNull(source).name
+            )
         }
         writeTextAtomically(lastCheckFile, nowEpochMillis().toString())
     }
@@ -340,8 +465,11 @@ class ApplicationUpdateService(
     private fun validateAsset(asset: UpdateInstallerAsset) {
         val uri = URI.create(asset.downloadUrl)
         if (requireSecureUrls) {
-            check(uri.scheme.equals("https", ignoreCase = true) && uri.host.equals("github.com", ignoreCase = true)) {
-                "Обновление разрешено скачивать только с официального GitHub."
+            check(uri.scheme.equals("https", ignoreCase = true)) {
+                "Ссылка на обновление должна использовать HTTPS."
+            }
+            check(uri.host.equals("github.com", ignoreCase = true)) {
+                "Резервное обновление разрешено скачивать только с официального GitHub."
             }
         }
         check(asset.name.endsWith(".msi", ignoreCase = true)) { "Файл обновления должен быть MSI." }
@@ -380,6 +508,25 @@ class ApplicationUpdateService(
 
     private fun powershellLiteral(value: String): String = value.replace("'", "''")
     private fun safeVersion(value: String): String = value.replace(Regex("[^0-9A-Za-z._-]"), "-")
+    private fun encoded(value: String): String = URLEncoder.encode(value, Charsets.UTF_8)
+
+    private fun validateYandexDownloadUri(uri: URI) {
+        if (!requireSecureUrls) return
+        val host = uri.host.orEmpty().lowercase()
+        check(uri.scheme.equals("https", ignoreCase = true)) {
+            "Яндекс Диск вернул небезопасную ссылку для скачивания."
+        }
+        check(
+            host == "yandex.ru" ||
+                    host.endsWith(".yandex.ru") ||
+                    host == "yandex.net" ||
+                    host.endsWith(".yandex.net") ||
+                    host == "yandex.com" ||
+                    host.endsWith(".yandex.com")
+        ) {
+            "Яндекс Диск вернул ссылку с неизвестного сервера: $host"
+        }
+    }
 
     private fun humanSize(bytes: Long): String = when {
         bytes >= 1024L * 1024L * 1024L -> "%.1f ГБ".format(bytes / (1024.0 * 1024.0 * 1024.0))
@@ -394,7 +541,12 @@ class ApplicationUpdateService(
     private companion object {
         const val LATEST_RELEASE_ENDPOINT =
             "https://github.com/maxx52/HolyPresenter/releases/latest/download/holypresenter-update.json"
+        const val YANDEX_PUBLIC_FOLDER_URL = "https://disk.yandex.ru/d/74XmnWUi9hUCuQ"
+        const val YANDEX_PUBLIC_DOWNLOAD_ENDPOINT =
+            "https://cloud-api.yandex.net/v1/disk/public/resources/download"
+        const val UPDATE_MANIFEST_NAME = "holypresenter-update.json"
         const val MANIFEST_SCHEMA_VERSION = 1
+        const val MAX_MANIFEST_SIZE_BYTES = 256 * 1024
         const val CHECK_INTERVAL_MILLIS = 6L * 60L * 60L * 1000L
         const val MAX_INSTALLER_SIZE_BYTES = 2L * 1024L * 1024L * 1024L
         const val MIN_FREE_SPACE_BYTES = 64L * 1024L * 1024L
